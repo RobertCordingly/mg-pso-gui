@@ -1,3 +1,9 @@
 #!/bin/bash
 
+rm -rf ./build/*
+rm -rf ./dist/*
+rmdir ./build   
+rmdir ./dist
+
 python3 setup.py sdist bdist_wheel
+twine upload dist/*

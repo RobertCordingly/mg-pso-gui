@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '0.0.1'
+VERSION = '0.0.3'
 DESCRIPTION = 'GUI for MG-PSO'
 LONG_DESCRIPTION = 'GUI for MG-PSO'
 
 # Setting up
 setup(
-    name="mg-pso-gui",
+    name="mg_pso_gui",
     version=VERSION,
     author="Robert Cordingly",
     author_email="<rcording@uw.ed>",
@@ -19,9 +19,11 @@ setup(
     install_requires=['pandas', 
                       'numpy', 
                       'requests',
-                      'tkinter',
+                      'tk',
                       'customtkinter',
-                      'plotly'],
+                      'plotly',
+                      'csip',
+                      'csip-cosu'],
     keywords=['python', 'muti-group', 'pso', 'particle', 'swarm', 'optimization', 'gui'],
     classifiers=[
         "Development Status :: 1 - Planning",
