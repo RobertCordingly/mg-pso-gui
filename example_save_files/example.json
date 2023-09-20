@@ -1,0 +1,215 @@
+{
+    "arguments": {
+        "param": [
+            {
+                "name": "startTime",
+                "value": "2002-01-01"
+            },
+            {
+                "name": "endTime",
+                "value": "2008-12-31"
+            },
+            {
+                "name": "cal_startTime",
+                "value": "2003-01-01"
+            },
+            {
+                "name": "cal_endTime",
+                "value": "2008-12-31"
+            },
+            {
+                "name": "dataStartTime",
+                "value": "2000-01-01"
+            },
+            {
+                "name": "dataEndTime",
+                "value": "2014-12-31"
+            },
+            {
+                "name": "parallelismThreads",
+                "value": "4"
+            },
+            {
+                "name": "flagLoadState",
+                "value": "true"
+            },
+            {
+                "name": "payload",
+                "value": "false"
+            },
+            {
+                "name": "project",
+                "value": "SFIR300"
+            }
+        ],
+        "url": "http://35.184.105.210:8080/csip-oms/m/ages/0.3.0",
+        "files": {}
+    },
+    "calibration_parameters": [
+        {
+            "name": "min_rounds",
+            "value": "1"
+        },
+        {
+            "name": "max_rounds",
+            "value": "2"
+        },
+        {
+            "name": "n_particles",
+            "value": "10"
+        },
+        {
+            "name": "iters",
+            "value": "20"
+        },
+        {
+            "name": "n_threads",
+            "value": "10"
+        },
+        {
+            "name": "ftol",
+            "value": "NULL"
+        },
+        {
+            "name": "options_c1",
+            "value": "2"
+        },
+        {
+            "name": "options_c2",
+            "value": "2"
+        },
+        {
+            "name": "options_w",
+            "value": "0.8"
+        },
+        {
+            "name": "strategy_w",
+            "value": "adaptive"
+        },
+        {
+            "name": "strategy_c1",
+            "value": "adaptive"
+        },
+        {
+            "name": "strategy_c2",
+            "value": "adaptive"
+        },
+        {
+            "name": "service_timeout",
+            "value": "400"
+        },
+        {
+            "name": "http_retry",
+            "value": "5"
+        },
+        {
+            "name": "allow_redirects",
+            "value": "True"
+        },
+        {
+            "name": "async_call",
+            "value": "False"
+        },
+        {
+            "name": "conn_timeout",
+            "value": "10"
+        },
+        {
+            "name": "read_timeout",
+            "value": "400"
+        },
+        {
+            "name": "particles_fail",
+            "value": "5"
+        }
+    ],
+    "steps": [
+        {
+            "param": [
+                {
+                    "name": "soilOutLPS",
+                    "bounds": [
+                        0.0,
+                        2.0
+                    ]
+                },
+                {
+                    "name": "lagInterflow",
+                    "bounds": [
+                        10.0,
+                        80.0
+                    ]
+                }
+            ],
+            "objfunc": [
+                {
+                    "name": "ns",
+                    "of": "ns",
+                    "weight": 1.0,
+                    "data": [
+                        "obs_data02_14.csv/obs/orun[1]",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"
+                    ]
+                }
+            ]
+        },
+        {
+            "param": [
+                {
+                    "name": "flowRouteTA",
+                    "bounds": [
+                        0.4,
+                        5.0
+                    ]
+                },
+                {
+                    "name": "soilMaxDPS",
+                    "bounds": [
+                        2.0,
+                        5.0
+                    ]
+                }
+            ],
+            "objfunc": [
+                {
+                    "name": "ns",
+                    "of": "ns",
+                    "weight": 1.0,
+                    "data": [
+                        "obs_data02_14.csv/obs/orun[1]",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"
+                    ]
+                }
+            ]
+        },
+        {
+            "param": [
+                {
+                    "name": "BetaW",
+                    "bounds": [
+                        0.01,
+                        20.0
+                    ]
+                },
+                {
+                    "name": "soilPolRed",
+                    "bounds": [
+                        1.0,
+                        40.0
+                    ]
+                }
+            ],
+            "objfunc": [
+                {
+                    "name": "ns",
+                    "of": "ns",
+                    "weight": 1.0,
+                    "data": [
+                        "obs_data02_14.csv/obs/orun[1]",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"
+                    ]
+                }
+            ]
+        }
+    ]
+}

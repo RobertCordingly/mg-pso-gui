@@ -1,0 +1,692 @@
+{
+
+    "calibration_parameters": [
+        {
+            "name": "min_rounds",
+            "value": "1"
+        },
+        {
+            "name": "max_rounds",
+            "value": "2"
+        },
+        {
+            "name": "n_particles",
+            "value": "10"
+        },
+        {
+            "name": "iters",
+            "value": "20"
+        },
+        {
+            "name": "n_threads",
+            "value": "10"
+        },
+        {
+            "name": "ftol",
+            "value": "NULL"
+        },
+        {
+            "name": "options_c1",
+            "value": "2"
+        },
+        {
+            "name": "options_c2",
+            "value": "2"
+        },
+        {
+            "name": "options_w",
+            "value": "0.8"
+        },
+        {
+            "name": "strategy_w",
+            "value": "adaptive"
+        },
+        {
+            "name": "strategy_c1",
+            "value": "adaptive"
+        },
+        {
+            "name": "strategy_c2",
+            "value": "adaptive"
+        },
+        {
+            "name": "service_timeout",
+            "value": "400"
+        },
+        {
+            "name": "http_retry",
+            "value": "5"
+        },
+        {
+            "name": "allow_redirects",
+            "value": "True"
+        },
+        {
+            "name": "async_call",
+            "value": "False"
+        },
+        {
+            "name": "conn_timeout",
+            "value": "10"
+        },
+        {
+            "name": "read_timeout",
+            "value": "400"
+        },
+        {
+            "name": "particles_fail",
+            "value": "5"
+        }
+    ],
+    "arguments": {
+        "param": [
+            {
+                "name": "startTime",
+                "value": "2002-01-01"
+            },
+            {
+                "name": "endTime",
+                "value": "2008-12-31"
+            },
+            {
+                "name": "cal_startTime",
+                "value": "2003-01-01"
+            },
+            {
+                "name": "cal_endTime",
+                "value": "2008-12-31"
+            },
+            {
+                "name": "dataStartTime",
+                "value": "2000-01-01"
+            },
+            {
+                "name": "dataEndTime",
+                "value": "2014-12-31"
+            },
+            {
+                "name": "parallelismThreads",
+                "value": "4"
+            },
+            {
+                "name": "flagLoadState",
+                "value": "true"
+            },
+            {
+                "name": "payload",
+                "value": "false"
+            },
+            {
+                "name": "project",
+                "value": "SFIR300"
+            }
+        ],
+        "url": "http://35.184.105.210:8080/csip-oms/m/ages/0.3.0",
+        "files": {}
+    },
+
+"steps": [
+    {
+    "param": [
+        {
+            "name": "baseTemp",
+            "bounds": [-6, 2],
+            "default_value": -1,
+            "type": "float"
+        },
+        {
+            "name": "t_factor",
+            "bounds": [0, 5],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "r_factor",
+            "bounds": [0, 5],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "g_factor",
+            "bounds": [0, 5],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "snowCritDens",
+            "bounds": [0.3, 0.5],
+            "default_value": 0.4,
+            "type": "float"
+        },
+        {
+            "name": "snow_trans",
+            "bounds": [0.0001, 2.5],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "snow_trs",
+            "bounds": [-5, 5],
+            "default_value": -11,
+            "type": "float"
+        },
+        {
+            "name": "ccf_factor",
+            "bounds": [0.0001, 0.01],
+            "default_value": 0.005,
+            "type": "float"
+        }
+    ],
+    "objfunc": [
+        {
+            "name": "ns1",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.132
+        },
+        {
+            "name": "nslog1",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.033
+        },
+        {
+            "name": "ns2",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.212
+        },
+        {
+            "name": "nslog2",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.053
+        },
+        {
+            "name": "ns3",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.456
+        },
+        {
+            "name": "nslog3",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.114
+        }
+    ]
+},
+{
+    "param": [
+        {
+            "name": "BetaW",
+            "bounds": [5, 15],
+            "default_value": 5,
+            "type": "float"
+        },
+        {
+            "name": "soilPolRed",
+            "bounds": [50, 80],
+            "default_value": 60,
+            "type": "float"
+        }
+    ],
+    "objfunc": [
+        {
+            "name": "ns1",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.132
+        },
+        {
+            "name": "nslog1",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.033
+        },
+        {
+            "name": "ns2",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.212
+        },
+        {
+            "name": "nslog2",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.053
+        },
+        {
+            "name": "ns3",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.456
+        },
+        {
+            "name": "nslog3",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.114
+        }
+    ]
+},
+{
+    "param": [
+        {
+            "name": "soilMaxInfSummer",
+            "bounds": [20, 75],
+            "default_value": 20,
+            "type": "float"
+        },
+        {
+            "name": "soilMaxInfWinter",
+            "bounds": [10, 75],
+            "default_value": 10,
+            "type": "float"
+        },
+        {
+            "name": "soilMaxInfSnow",
+            "bounds": [0, 40],
+            "default_value": 10,
+            "type": "float"
+        },
+        {
+            "name": "soilDistMPSLPS",
+            "bounds": [0.5, 3],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "soilMaxDPS",
+            "bounds": [1, 4.5],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "a_rain",
+            "bounds": [3, 6.5],
+            "default_value": 3,
+            "type": "float"
+        },
+        {
+            "name": "a_snow",
+            "bounds": [0, 3],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "soils_hor.csv/soils/kf/1001;1101;1201;1301;1401;1501;1601;1701;1801;1901;2001;2101;2201;2301;2401;2501;2601;2701",
+            "bounds": [-0.999, 0.28],
+            "default_value": [77.76, 77.76, 77.76, 77.76, 77.76, 77.76, 77.76, 77.76, 77.76, 77.76, 79.2288, 77.76,
+                                77.76, 77.76, 77.76, 77.76, 77.76, 77.76],
+            "type": "list",
+            "calibration_strategy": "mean"
+
+        }
+    ],
+    "objfunc": [
+        {
+            "name": "ns1",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.132
+        },
+        {
+            "name": "nslog1",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.033
+        },
+        {
+            "name": "ns2",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.212
+        },
+        {
+            "name": "nslog2",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.053
+        },
+        {
+            "name": "ns3",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.456
+        },
+        {
+            "name": "nslog3",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.114
+        }
+    ]
+},
+{
+    "param": [
+        {
+            "name": "soils_hor.csv/soils/kf/1002;1102;1202;1503;2102;2302;2702",
+            "bounds": [0, 100],
+            "default_value": [10, 10, 10, 10, 10, 10, 10],
+            "type": "list",
+            "calibration_strategy": "mean"
+
+        },
+        {
+            "name": "soils_hor.csv/soils/aircapacity/1002;1102;1202;1503;2102;2302;2702",
+            "bounds": [0.35, 0.55],
+            "default_value": [0.36, 0.36, 0.36, 0.36, 0.36, 0.36, 0.36],
+            "type": "list",
+            "calibration_strategy": "mean"
+
+        },
+        {
+            "name": "soils_hor.csv/soils/fieldcapacity/1002;1102;1202;1503;2102;2302;2702",
+            "bounds": [0.1, 0.3],
+            "default_value": [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+            "type": "list",
+            "calibration_strategy": "mean"
+
+        }
+    ],
+    "objfunc": [
+        {
+            "name": "ns1",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.132
+        },
+        {
+            "name": "nslog1",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.033
+        },
+        {
+            "name": "ns2",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.212
+        },
+        {
+            "name": "nslog2",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.053
+        },
+        {
+            "name": "ns3",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.456
+        },
+        {
+            "name": "nslog3",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.114
+        }
+    ]
+},
+{
+    "param": [
+        {
+            "name": "soils_hor.csv/soils/kf/1003;1103;1203;1504;1505;1506;1702;1703;2103;2303;2703",
+            "bounds": [0, 0.8],
+            "default_value": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+            "type": "list",
+            "calibration_strategy": "mean"
+
+        },
+        {
+            "name": "soils_hor.csv/soils/aircapacity/1003;1103;1203;1504;1505;1506;1702;1703;2103;2303;2703",
+            "bounds": [0.35, 0.55],
+            "default_value": [0.36, 0.36, 0.36, 0.36, 0.36, 0.36, 0.36, 0.36, 0.36, 0.36, 0.36],
+            "type": "list",
+            "calibration_strategy": "mean"
+
+        },
+        {
+            "name": "soils_hor.csv/soils/fieldcapacity/1003;1103;1203;1504;1505;1506;1702;1703;2103;2303;2703",
+            "bounds": [0.1, 0.3],
+            "default_value": [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25],
+            "type": "list",
+            "calibration_strategy": "mean"
+
+        }
+    ],
+    "objfunc": [
+        {
+            "name": "ns1",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.132
+        },
+        {
+            "name": "nslog1",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.033
+        },
+        {
+            "name": "ns2",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.212
+        },
+        {
+            "name": "nslog2",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.053
+        },
+        {
+            "name": "ns3",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.456
+        },
+        {
+            "name": "nslog3",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.114
+        }
+    ]
+},
+{
+    "param": [
+        {
+            "name": "soilOutLPS",
+            "bounds": [0.01, 6],
+            "default_value": 0.1,
+            "type": "float"
+        },
+        {
+            "name": "soilLatVertLPS",
+            "bounds": [0.01, 10],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "kdiff_layer",
+            "bounds": [0.01, 50],
+            "default_value": 10,
+            "type": "float"
+        },
+        {
+            "name": "soilDiffMPSLPS",
+            "bounds": [0.01, 10],
+            "default_value": 1,
+            "type": "float"
+        },
+        {
+            "name": "gwCapRise",
+            "bounds": [0.01, 0.8],
+            "default_value": 0.5,
+            "type": "float"
+        },
+        {
+            "name": "gwRG1Fact",
+            "bounds": [20, 75],
+            "default_value": 30,
+            "type": "float"
+        },
+        {
+            "name": "gwRG2Fact",
+            "bounds": [10, 75],
+            "default_value": 20,
+            "type": "float"
+        },
+        {
+            "name": "gwRG1RG2dist",
+            "bounds": [0.01, 0.99],
+            "default_value": 0.3,
+            "type": "float"
+        },
+        {
+            "name": "geoMaxPerc",
+            "bounds": [0.01, 0.5],
+            "default_value": 0.1,
+            "type": "float"
+        }
+
+    ],
+    "objfunc": [
+        {
+            "name": "ns1",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.132
+        },
+        {
+            "name": "nslog1",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.033
+        },
+        {
+            "name": "ns2",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.212
+        },
+        {
+            "name": "nslog2",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.053
+        },
+        {
+            "name": "ns3",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.456
+        },
+        {
+            "name": "nslog3",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.114
+        }
+    ]
+},
+{
+    "param": [
+        {
+            "name": "flowRouteTA",
+            "bounds": [1, 50],
+            "default_value": 5,
+            "type": "float"
+        },
+        {
+            "name": "lagSurfaceRunoff",
+            "bounds": [1, 2],
+            "default_value": 1,
+            "type": "float"
+        }
+    ],
+    "objfunc": [
+        {
+            "name": "ns1",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.132
+        },
+        {
+            "name": "nslog1",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0296",
+                        "output/csip_run/out/Reach_-1148.csv/output/simRunoff_qm_sec"],
+            "weight": 0.033
+        },
+        {
+            "name": "ns2",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.212
+        },
+        {
+            "name": "nslog2",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0297",
+                        "output/csip_run/out/Reach_-1150.csv/output/simRunoff_qm_sec"],
+            "weight": 0.053
+        },
+        {
+            "name": "ns3",
+            "of": "ns",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.456
+        },
+        {
+            "name": "nslog3",
+            "of": "nslog1p",
+            "data": ["orun_subcatchments.csv/obs/MOGC0298",
+                        "output/csip_run/out/Outlet.csv/output/catchmentSimRunoff"],
+            "weight": 0.114
+        }
+    ]
+}
+]
+}
