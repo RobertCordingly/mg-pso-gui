@@ -476,6 +476,9 @@ class App(customtkinter.CTk):
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
         customtkinter.set_widget_scaling(new_scaling_float)
 
+def start():
+    app = App()
+    app.mainloop()
 
 if __name__ == "__main__":
     app = App()
