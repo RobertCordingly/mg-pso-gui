@@ -1,0 +1,2 @@
+import mgpsogui
+mgpsogui.start()

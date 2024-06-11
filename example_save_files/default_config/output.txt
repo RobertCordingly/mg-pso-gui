@@ -1,0 +1,16 @@
+
+
+{'min_rounds': '1', 'max_rounds': '2', 'n_particles': '10', 'iters': '20', 'n_threads': '10', 'ftol': 'NULL', 'options_c1': '2', 'options_c2': '2', 'options_w': '0.8', 'strategy_w': 'adaptive', 'strategy_c1': 'adaptive', 'strategy_c2': 'adaptive', 'service_timeout': '400', 'http_retry': '5', 'allow_redirects': 'True', 'async_call': 'False', 'conn_timeout': '10', 'read_timeout': '400', 'particles_fail': '5'}
+
+
+{'c1': 2.0, 'c2': 2.0, 'w': 0.8}
+
+
+{'w': 'adaptive', 'c1': 'adaptive', 'c2': 'adaptive'}
+
+
+Running global_best...
+
+
+>>>>> R1/S1  particle params: ['soilOutLPS', 'lagInterflow']  calibrated params: {}
+
