@@ -50,7 +50,7 @@ from .VisualizeTab import VisualizeTab as vt
 
 from ..util.CTkToolTip import CTkToolTip as ctt
 
-customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
+customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 results_queue = Queue()
@@ -66,10 +66,22 @@ class App(customtkinter.CTk):
 		self.graph_selector_value = tk.StringVar()
 		self.graph_selector_value.set("Best Cost Stacked")
 
+		self.graph_theme_value = tk.StringVar()
+		self.graph_theme_value.set("Dark")
+
 		self.selected_csv = tk.StringVar()
 		self.selected_csv.set("No files found...")
 		self.open_file = "None"
 		self.csv_data = None
+
+		self.sensitivity_file = tk.StringVar()
+		self.sensitivity_file.set("No files found...")
+
+		self.sampling_method = tk.StringVar()
+		self.sampling_method.set("Halton")
+
+		self.sampling_output = tk.StringVar()
+		self.sampling_output.set("Replace")
 
 		self.selected_csv2 = tk.StringVar()
 		self.selected_csv2.set("No files found...")
@@ -84,6 +96,13 @@ class App(customtkinter.CTk):
 
 		self.selected_y2 = tk.StringVar()
 		self.selected_y2.set("NONE")
+
+		self.figure_style = tk.StringVar()
+		self.figure_style.set("Scatter")
+
+		self.matrix_values = []
+		self.matrix_values.append(tk.StringVar())
+		self.matrix_values[0].set("NONE")
 
 		self.running_config = None
 		self.selected_graph_name = None
@@ -114,7 +133,7 @@ class App(customtkinter.CTk):
 		self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
 		self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 		self.sidebar_frame.grid_columnconfigure(4, weight=1)
-		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="CSIP PSO", font=customtkinter.CTkFont(size=20, weight="bold"))
+		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager", font=customtkinter.CTkFont(size=20, weight="bold"))
 		self.logo_label.grid(row=0, column=0, padx=(20, 10), pady=header_padding_y)
 		self.save_button = customtkinter.CTkButton(self.sidebar_frame, text="Save", width=60, command=self.save_project)
 		self.save_button.grid(row=0, column=1, padx=header_padding_x, pady=header_padding_y)
@@ -124,28 +143,27 @@ class App(customtkinter.CTk):
 		# 4 is service URL
 		self.service_label = customtkinter.CTkLabel(self.sidebar_frame, text="Service:", anchor="w")
 		self.service_label.grid(row=0, column=3, padx=(80, 5), pady=header_padding_y)
-		self.service_url = customtkinter.CTkEntry(self.sidebar_frame, textvariable=self.option_manager.get_arguments()['url'])
+		self.service_url = customtkinter.CTkEntry(self.sidebar_frame, textvariable=self.option_manager.get("url"))
 		self.service_url.grid(row=0, column=4, columnspan=1, padx=header_padding_x, pady=header_padding_y, sticky="nsew")
 		refresh_image = customtkinter.CTkImage(Image.open(os.path.join("./images", "refresh.png")), size=(20, 20))
 		self.refresh_button = customtkinter.CTkButton(self.sidebar_frame, text=None, width=30, image=refresh_image, command=self.load)
 		ctt(self.refresh_button, delay=0.1, alpha=0.95, message="Connect to Service")
 		self.refresh_button.grid(row=0, column=5, padx=header_padding_x, pady=header_padding_y)
 
-		self.algorithm_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, variable=self.option_manager.get_arguments()['mode'], values=["Optimization: MG-PSO", "Sampling: Halton", "Sampling: Random"], width=50, command=self.refresh_step_view)
+		self.algorithm_optionmenu = customtkinter.CTkOptionMenu(self.sidebar_frame, variable=self.option_manager.get_mode_sv(), values=self.option_manager.get_service_modes(), width=50, command=self.refresh_step_view)
 		self.algorithm_optionmenu.grid(row=0, column=6, padx=(5, 80), pady=header_padding_y)
-		self.algorithm_optionmenu.set("Optimization: MG-PSO")
 		
 		self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="Scale:", anchor="w")
 		self.scaling_label.grid(row=0, column=7, padx=header_padding_x, pady=header_padding_y)
 		self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["50%", "75%", "100%", "125%", "150%", "175%", "200%"], width=60,
 																command=self.change_scaling_event)
-		self.scaling_optionemenu.grid(row=0, column=8, padx=header_padding_x, pady=header_padding_y)
+		self.scaling_optionemenu.grid(row=0, column=8, padx=(5, 20), pady=header_padding_y)
 		self.scaling_optionemenu.set("100%")
 		
 		expand_image = customtkinter.CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
-		self.new_window = customtkinter.CTkButton(self.sidebar_frame, text=None, width=30, image=expand_image, command=self.open_new_window)
-		ctt(self.new_window, delay=0.1, alpha=0.95, message="Open New Window")
-		self.new_window.grid(row=0, column=9, padx=(5, 20), pady=header_padding_y)
+		#self.new_window = customtkinter.CTkButton(self.sidebar_frame, text=None, width=30, image=expand_image, command=self.open_new_window)
+		#ctt(self.new_window, delay=0.1, alpha=0.95, message="Open New Window")
+		#self.new_window.grid(row=0, column=9, padx=(5, 20), pady=header_padding_y)
 		
 		self.tabview = customtkinter.CTkTabview(self, bg_color="transparent", fg_color="transparent")
 		self.tabview.grid(row=1, column=0, padx=(0, 0), pady=(10, 10), sticky="nsew")
@@ -202,22 +220,11 @@ class App(customtkinter.CTk):
 		GraphGenerator.generate_graphs(self)
 			
 	def save_project(self):
-		metrics = self.option_manager.get_metrics()
-
-		# Add the calibration_progress dataframe to the json
-		if (self.progress_data is not None):
-			metrics["calibration_progress"] = self.progress_data.to_json()
-		# Add the calibration_data to the json
-		if (self.calibration_data is not None):
-			metrics["calibration_data"] = self.calibration_data
-
 		filename = asksaveasfilename(filetypes=[("JSON", "*.json")], initialfile="config", defaultextension="json", title="Save Project")
 		
 		try:
 		
-			# Convert metrics to json and save to file with proper spacing
-			with open(filename, "w") as f:
-				f.write(json.dumps(metrics, indent=4))
+			self.option_manager.save_project(filename)
 				
 			self.save_button.configure(text="Saved!")
 			self.after(3000, lambda: self.save_button.configure(text="Save"))
@@ -227,9 +234,10 @@ class App(customtkinter.CTk):
 			self.after(3000, lambda: self.save_button.configure(text="Save"))
 	
 	def refresh_step_view(self, value):
-		mode = self.option_manager.get_arguments()['mode'].get()
+		mode = self.option_manager.get_mode()
+		self.service_url.configure(textvariable=self.option_manager.get("url"))
 
-		if mode == "Optimization: MG-PSO":
+		if mode == "Optimization":
 			self.test_button.configure(state="normal")
 			self.test_button.configure(fg_color=get_color("CTkButton"))
 			self.download_button.configure(state="normal")
@@ -242,8 +250,18 @@ class App(customtkinter.CTk):
 
 		self.steps_frame.clear()
 		self.steps_frame.render()
-		self.optimal_param_frame.clear()
-		self.optimal_param_frame.render()
+
+		self.static_param_frame.clear()
+		self.static_param_frame.render()
+		
+		self.calib_param_frame.clear()
+		self.calib_param_frame.render()
+
+		self.service_param_frame.clear()
+		self.service_param_frame.render()
+
+		#self.optimal_param_frame.clear()
+		#self.optimal_param_frame.render()
 
 	def open_new_window(self):
 		# Shell out and run ./main.py
@@ -256,45 +274,9 @@ class App(customtkinter.CTk):
 		
 		try:
 		
-			# Load config.json and convert to metrics
-			with open(filename, "r") as f:
-				metrics = json.loads(f.read())
+			self.option_manager.load_project(filename)
 			
-			self.option_manager.set_path(filename)
-			
-			if "arguments" in metrics:
-				metrics["arguments"]["calibration_parameters"] = metrics["calibration_parameters"]
-			
-			if "service_parameters" in metrics:
-				self.option_manager.set_service_parameters(metrics["service_parameters"])
-				self.tabview.configure(state="enabled")
-	
-			if "calibration_progress" in metrics:
-				self.progress_data = pd.read_json(metrics["calibration_progress"])
-				self.calibration_data = metrics["calibration_data"]
-				print(self.progress_data)
-	
-			if "calibration_data" in metrics:
-				self.calibration_data = metrics["calibration_data"]
-				print(self.calibration_data)
-			
-			print(metrics)
-			
-			self.option_manager.clear()
-			self.option_manager.add_arguments(metrics["arguments"])
-			self.option_manager.add_steps(metrics["steps"])
-			
-			self.steps_frame.clear()
-			self.steps_frame.render()
-
-			self.static_param_frame.clear()
-			self.static_param_frame.render()
-			
-			self.calib_param_frame.clear()
-			self.calib_param_frame.render()
-
-			self.optimal_param_frame.clear()
-			self.optimal_param_frame.render()
+			self.refresh_step_view(0)
 			
 			self.load_button.configure(text="Loaded!")
 			self.after(3000, lambda: self.load_button.configure(text="Load"))
@@ -303,6 +285,10 @@ class App(customtkinter.CTk):
 			
 		except Exception as e:
 			print(e)
+			# Print stack trace 
+			traceback.print_exc()
+			
+
 			self.load_button.configure(text="Error!")
 			self.after(3000, lambda: self.load_button.configure(text="Load"))
 
@@ -325,7 +311,7 @@ class App(customtkinter.CTk):
 			response_json = json.loads(response.text)
 			status = response.status_code
 			
-			self.option_manager.set_service_parameters(response_json)
+			self.option_manager.set_data("service_request_data", response_json)
 			
 			self.service_status.delete('0.0', tk.END)
 			self.service_status.insert(text=str(status), index='0.0')
@@ -335,13 +321,13 @@ class App(customtkinter.CTk):
 			self.service_description.insert(text=str(response_json["metainfo"]["description"]), index='0.0')
 			self.service_details.delete('0.0', tk.END)
 			self.service_details.insert(text=json.dumps(response_json, indent=4), index='0.0')
-			
-			self.refresh_step_view(0)
 
 			self.refresh_button.configure(fg_color="green")
 		except Exception as e:
 			self.refresh_button.configure(fg_color="red")
 			self.after(1000, lambda: self.refresh_button.configure(fg_color=get_color("CTkButton")))
+
+		self.refresh_step_view(0)
 		
 	
 	def load(self):
@@ -357,6 +343,8 @@ class App(customtkinter.CTk):
 		self.run()	
 
 	def run(self):
+		pass
+		"""
 		metrics = self.option_manager.get_metrics()
 		self.running_config = metrics
 		
@@ -366,6 +354,8 @@ class App(customtkinter.CTk):
 				for param in step['param']:
 					param['default_value'] = param['optimal_value']
 		self.testing = False
+
+		metrics["sensitivity_analysis_path"] = self.sensitivity_file.get()
 
 		self.progress_data = None
 		self.calibration_data = None
@@ -378,7 +368,7 @@ class App(customtkinter.CTk):
 		self.data_x = [0]
 		self.data_y = [0]
 		
-		self.progress_message_middle.configure(text="Job starting...")
+		#self.progress_message_middle.configure(text="Job starting...")
 		self.footer_progress_label.configure(text="Starting...")
 		
 		self.textbox.insert("0.0", "Starting job...\n\n")
@@ -410,9 +400,9 @@ class App(customtkinter.CTk):
 			self.textbox.insert("0.0", traceback.format_exc())
 			self.textbox.insert("0.0", "\n\n")
 			self.textbox.insert("0.0", "Job failed!")
-			self.progress_message_left.configure(text="")
-			self.progress_message_middle.configure(text="Job failed! See error log below.")
-			self.progress_message_right.configure(text="")
+			#self.progress_message_left.configure(text="")
+			#self.progress_message_middle.configure(text="Job failed! See error log below.")
+			#self.progress_message_right.configure(text="")
 			self.footer_progress_label.configure(text="Failed")
 			#self.progress_bar.stop()
 			self.footer_progress_bar.stop()
@@ -420,35 +410,35 @@ class App(customtkinter.CTk):
 			self.footer_progress_bar.configure(mode="determinate")
 			#self.progress_bar.set(0)
 			self.footer_progress_bar.set(0)
+	"""
 			
 	def stop(self):
 		print("Stopping...")
 		self.train_process.terminate()
 		
-		info = self.option_manager.get_project_data()
-		folder = os.path.join(info['path'], info['name'])
+		folder = self.option_manager.get_project_folder()
 			
 		if not os.path.exists(folder):
 			os.makedirs(folder)
 		
 		# Stop the process
-		if (os.path.exists(os.path.join(folder, 'output.txt'))):
-			os.remove(os.path.join(folder, 'output.txt'))
+		#if (os.path.exists(os.path.join(folder, 'output.txt'))):
+		#	os.remove(os.path.join(folder, 'output.txt'))
 		
-		if (os.path.exists(os.path.join(folder, 'error.txt'))):
-			os.remove(os.path.join(folder, 'error.txt'))
+		#if (os.path.exists(os.path.join(folder, 'error.txt'))):
+		#	os.remove(os.path.join(folder, 'error.txt'))
 			
-		self.textbox.insert("0.0", "\Job terminated!\n")
+		self.textbox.insert("0.0", "Job terminated!\n")
 		#self.progress_bar.stop()
 		self.footer_progress_bar.stop()
 		#self.progress_bar.configure(mode="determinate")
 		self.footer_progress_bar.configure(mode="determinate")
 		#self.progress_bar.set(0)
 		self.footer_progress_bar.set(0)
-		self.progress_message_left.configure(text="")
-		self.progress_message_middle.configure(text="Job stopped!")
+		#self.progress_message_left.configure(text="")
+		#self.progress_message_middle.configure(text="Job stopped!")
 		self.footer_progress_label.configure(text="Stopped")
-		self.progress_message_right.configure(text="")
+		#self.progress_message_right.configure(text="")
 		
 	def running_loop(self):
 		try:
@@ -461,9 +451,7 @@ class App(customtkinter.CTk):
 	def watch_loop(self):
 		print("Watch loop running...")
 
-		# Check if file exists:
-		info = self.option_manager.get_project_data()
-		folder = os.path.join(info['path'], info['name'])
+		folder = self.option_manager.get_project_folder()
 			
 		if not os.path.exists(folder):
 			os.makedirs(folder)
@@ -504,7 +492,7 @@ class App(customtkinter.CTk):
 					for param in step.keys():
 						value = step[param]
 						target_step = all_steps[index]
-						for target_param in target_step['param']:
+						for target_param in target_step['parameter_objects']:
 							if target_param['name'].get() == param:
 								target_param['optimal_value'].set(value)
 					index += 1
@@ -557,10 +545,11 @@ class App(customtkinter.CTk):
 				print(e)
 				
 		# Parse data into interface
-		mode = self.option_manager.get_arguments()['mode'].get()
-		if mode == "Optimization: MG-PSO":
+		mode = self.option_manager.get_mode()
+		if mode == "Optimization":
 			if (os.path.exists(os.path.join(folder, 'error.txt'))):
 				data = hp.parse_pso_error(os.path.join(folder, 'error.txt'), len(self.option_manager.get_steps()))
+				print(data)
 				self.progress_data = data["data"]
 				self.footer_progress_bar.stop()
 				self.footer_progress_bar.configure(mode="determinate")
@@ -569,6 +558,7 @@ class App(customtkinter.CTk):
 		else:
 			if (os.path.exists(os.path.join(folder, 'output.txt'))):
 				data = hp.parse_sampling_output(os.path.join(folder, 'output.txt'))
+				print(data)
 				self.footer_progress_bar.stop()
 				self.footer_progress_bar.configure(mode="determinate")
 				self.footer_progress_bar.set(data["percent"]/100)
@@ -585,9 +575,9 @@ class App(customtkinter.CTk):
 			self.footer_progress_bar.configure(mode="indeterminate")
 			#self.progress_bar.start()
 			self.footer_progress_bar.start()
-			self.progress_message_left.configure(text="")
-			self.progress_message_middle.configure(text="Job finished!")
-			self.progress_message_right.configure(text="")
+			#self.progress_message_left.configure(text="")
+			#self.progress_message_middle.configure(text="Job finished!")
+			#self.progress_message_right.configure(text="")
 			self.textbox.insert("0.0", "\nJob finished!\n")
 
 			# IF "./crash.txt" exists write it to the textbox

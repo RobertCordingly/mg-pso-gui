@@ -9,6 +9,8 @@ from customtkinter import CTkOptionMenu
 from PIL import Image
 import os
 
+from . import MatrixEditor as me
+
 import pandas as pd
 
 class SideBar(CTkScrollableFrame):
@@ -57,8 +59,7 @@ class SideBar(CTkScrollableFrame):
             pass
         elif (selected_graph == "Custom CSV"):
             
-            info = self.option_manager.get_project_data()
-            folder = os.path.join(info['path'], info['name'])
+            folder = self.option_manager.get_project_folder()
             if not os.path.exists(folder):
                 os.makedirs(folder)
                 
@@ -122,8 +123,7 @@ class SideBar(CTkScrollableFrame):
                     self.home_page.csv_y2_selector.set(columns[3])
                     
         elif (selected_graph == "Compare CSV"):
-            info = self.option_manager.get_project_data()
-            folder = os.path.join(info['path'], info['name'])
+            folder = self.option_manager.get_project_folder()
             if not os.path.exists(folder):
                 os.makedirs(folder)
                 
@@ -198,7 +198,144 @@ class SideBar(CTkScrollableFrame):
                 if (self.home_page.csv_y2_selector.get() not in columns2):
                     self.home_page.csv_y2_selector.set(columns2[2])
                     
-                    
+        elif (selected_graph == "Sampling CSV"):
+            
+            folder = self.option_manager.get_project_folder()
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+                
+            # Get all CSV files in the folder and add their paths to a list
+            path_map = {}
+            name_list = []
+            for root, dirs, files in os.walk(folder):
+                for file in files:
+                    if file.endswith(".csv"):
+                        name = file.replace(".csv", "")
+                        name_list.append(name)
+                        path_map[name] = os.path.join(root, file)
+            
+            if (len(name_list) == 0):
+                name_list.append("No files found...")
+            else:
+                if (self.home_page.selected_csv.get() not in name_list):
+                    self.home_page.selected_csv.set(name_list[0])
+            
+            file_label = CTkLabel(self.containerFrame, text="CSV File:")
+            file_label.grid(row=0, column=0, padx=(20, 20), pady=(20, 5), sticky="w")
+            
+            self.home_page.csv_file_selector = CTkOptionMenu(self.containerFrame, values=name_list, variable=self.home_page.selected_csv, command=self.home_page.update_graph)
+            self.home_page.csv_file_selector.grid(row=1, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+            
+            selected_file = self.home_page.selected_csv.get()
+            if (selected_file in path_map and selected_file != self.home_page.open_file):
+                self.home_page.csv_data = pd.read_csv(path_map[selected_file])
+                print(self.home_page.csv_data)
+                self.home_page.open_file = selected_file
+                
+            if (self.home_page.csv_data is not None):
+                # Get all column names of CSV
+                columns = self.home_page.csv_data.columns
+                
+                x_axis_label = CTkLabel(self.containerFrame, text="X Axis:")
+                x_axis_label.grid(row=2, column=0, padx=(20, 20), pady=(40, 5), sticky="w")
+                
+                self.home_page.csv_x_selector = CTkOptionMenu(self.containerFrame, values=columns, variable=self.home_page.selected_x, command=self.home_page.update_graph)
+                self.home_page.csv_x_selector.grid(row=3, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+                
+                if (self.home_page.csv_x_selector.get() not in columns):
+                    self.home_page.csv_x_selector.set(columns[1])
+                
+                y1_axis_label = CTkLabel(self.containerFrame, text="Y Axis:")
+                y1_axis_label.grid(row=4, column=0, padx=(20, 20), pady=(20, 5), sticky="w")
+                
+                self.home_page.csv_y1_selector = CTkOptionMenu(self.containerFrame, values=columns, variable=self.home_page.selected_y1, command=self.home_page.update_graph)
+                self.home_page.csv_y1_selector.grid(row=5, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+                
+                if (self.home_page.csv_y1_selector.get() not in columns):
+                    self.home_page.csv_y1_selector.set(columns[2])
+                
+                y2_axis_label = CTkLabel(self.containerFrame, text="Secondary Y Axis:")
+                y2_axis_label.grid(row=6, column=0, padx=(20, 20), pady=(20, 5), sticky="w")
+                
+                self.home_page.csv_y2_selector = CTkOptionMenu(self.containerFrame, values=columns, variable=self.home_page.selected_y2, command=self.home_page.update_graph)
+                self.home_page.csv_y2_selector.grid(row=7, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+                
+                if (self.home_page.csv_y2_selector.get() not in columns):
+                    self.home_page.csv_y2_selector.set(columns[3])
+
+                style_label = CTkLabel(self.containerFrame, text="Figure Style:")
+                style_label.grid(row=8, column=0, padx=(20, 20), pady=(20, 5), sticky="w")
+                
+                self.home_page.figure_style_selector = CTkOptionMenu(self.containerFrame, values=["Scatter", "Bars", "Lines", "Area", "Box"], variable=self.home_page.figure_style, command=self.home_page.update_graph)
+                self.home_page.figure_style_selector.grid(row=9, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+
+        elif (selected_graph == "Matrix Editor"):
+            
+            folder = self.option_manager.get_project_folder()
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+                
+            # Get all CSV files in the folder and add their paths to a list
+            path_map = {}
+            name_list = []
+            for root, dirs, files in os.walk(folder):
+                for file in files:
+                    if file.endswith(".csv"):
+                        name = file.replace(".csv", "")
+                        name_list.append(name)
+                        path_map[name] = os.path.join(root, file)
+            
+            if (len(name_list) == 0):
+                name_list.append("No files found...")
+            else:
+                if (self.home_page.selected_csv.get() not in name_list):
+                    self.home_page.selected_csv.set(name_list[0])
+            
+            file_label = CTkLabel(self.containerFrame, text="CSV File:")
+            file_label.grid(row=0, column=0, padx=(20, 20), pady=(20, 5), sticky="w")
+            
+            self.home_page.csv_file_selector = CTkOptionMenu(self.containerFrame, values=name_list, variable=self.home_page.selected_csv, command=self.home_page.update_graph)
+            self.home_page.csv_file_selector.grid(row=1, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+            
+            selected_file = self.home_page.selected_csv.get()
+            if (selected_file in path_map and selected_file != self.home_page.open_file):
+                self.home_page.csv_data = pd.read_csv(path_map[selected_file])
+                print(self.home_page.csv_data)
+                self.home_page.open_file = selected_file
+                
+            if (self.home_page.csv_data is not None):
+                # Get all column names of CSV
+                columns = self.home_page.csv_data.columns
+                
+                style_label = CTkLabel(self.containerFrame, text="Figure Style:")
+                style_label.grid(row=2, column=0, padx=(20, 20), pady=(20, 5), sticky="w")
+                
+                self.home_page.figure_style_selector = CTkOptionMenu(self.containerFrame, values=["Scatter", "Bars", "Lines", "Area", "Box"], variable=self.home_page.figure_style, command=self.home_page.update_graph)
+                self.home_page.figure_style_selector.grid(row=3, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+
+                x_axis_label = CTkLabel(self.containerFrame, text="Y Axis:")
+                x_axis_label.grid(row=4, column=0, padx=(20, 20), pady=(40, 5), sticky="w")
+                
+                self.home_page.csv_x_selector = CTkOptionMenu(self.containerFrame, values=columns, variable=self.home_page.selected_x, command=self.home_page.update_graph)
+                self.home_page.csv_x_selector.grid(row=5, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+                
+                if (self.home_page.csv_x_selector.get() not in columns):
+                    self.home_page.csv_x_selector.set(columns[1])
+                
+                self.matrix_editor = me.MatrixEditor(self.containerFrame, width=280, option_manager=self.option_manager, home_page=self.home_page, columns=columns)
+                self.matrix_editor.grid(row=6, column=0, padx=(10, 10), pady=(10, 0), sticky="nsew")
+                self.matrix_editor.grid_columnconfigure(0, weight=1)
+                self.matrix_editor.grid_rowconfigure(0, weight=1)
+
+
+                #y1_axis_label = CTkLabel(self.containerFrame, text="Y Axis:")
+                #y1_axis_label.grid(row=6, column=0, padx=(20, 20), pady=(20, 5), sticky="w")
+
+                #self.home_page.csv_y1_selector = CTkOptionMenu(self.containerFrame, values=columns, variable=self.home_page.selected_y1, command=self.home_page.update_graph)
+                #self.home_page.csv_y1_selector.grid(row=7, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+                
+                #if (self.home_page.csv_y1_selector.get() not in columns):
+                #    self.home_page.csv_y1_selector.set(columns[2])
 
     def load_special_csv(self, file_path):
         file_metadata = {}

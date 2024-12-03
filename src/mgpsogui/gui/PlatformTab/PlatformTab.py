@@ -5,6 +5,8 @@ import subprocess
 import customtkinter
 import platform
 
+from ..General import ParameterView as pv
+
 import tkinter as tk
 
 def create_tab(self, tab):
@@ -16,7 +18,7 @@ def create_tab(self, tab):
         response_json = json.loads(response.text)
         status = response.status_code
         
-        self.option_manager.set_service_parameters(response_json)
+        self.option_manager.set_data(response_json)
         self.tabview.configure(state="enabled")
         
         self.service_status.delete('0.0', tk.END)
@@ -67,7 +69,7 @@ def create_tab(self, tab):
             
                 
     def open_terminal_and_run_cluster():
-        full_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'start.yaml'))
+        full_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'start.yaml'))
         command = "minikube kubectl -- create -f " + full_path + " ; sleep 60 ; minikube service pf8087-csu-csip-oms -n csip"
         #command = "minikube kubectl -- create -f " + full_path + " ; until [[ $(minikube kubectl -- get pods -l app=pf8087-csu-csip-oms -n csip -o \\'jsonpath={..status.conditions[?(@.type==\\\"Ready\\\")].status}\\') == \\\"True\\\" ]]; do echo \\\"waiting for pod\\\" && sleep 1; done ; minikube service pf8087-csu-csip-oms -n csip"
         
@@ -114,6 +116,7 @@ def create_tab(self, tab):
     
     tab.grid_columnconfigure(0, weight=1)
     tab.grid_columnconfigure(1, weight=1)
+    tab.grid_columnconfigure(2, weight=1)
     tab.grid_rowconfigure(0, weight=1)
     
     """
@@ -131,9 +134,15 @@ def create_tab(self, tab):
     self.load_parameters.grid(row=0, column=2, padx=(20, 20), pady=(20, 20), sticky="nsew")
     
     """
+
+    self.service_param_frame = pv.ParameterView(tab, option_manager=self.option_manager, list_name="service_parameters", label_text="Service Parameters")
+    self.service_param_frame.grid(row=0, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
+    self.service_param_frame.grid_columnconfigure(0, weight=1)
+    self.service_param_frame.grid_rowconfigure(0, weight=1)
+
             
-    self.service_editor = customtkinter.CTkScrollableFrame(tab, label_text="Service Editor")
-    self.service_editor.grid(row=0, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
+    self.service_editor = customtkinter.CTkScrollableFrame(tab, label_text="Service Status")
+    self.service_editor.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew")
     self.service_editor.grid_columnconfigure(0, weight=1)
     self.service_editor.grid_rowconfigure(0, weight=1)
     
@@ -161,8 +170,8 @@ def create_tab(self, tab):
     self.service_details = customtkinter.CTkTextbox(self.service_editor, height=480)
     self.service_details.grid(row=8, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
     
-    self.environment_editor = customtkinter.CTkScrollableFrame(tab, label_text="Environment Editor")
-    self.environment_editor.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew")
+    self.environment_editor = customtkinter.CTkScrollableFrame(tab, label_text="Minikube Environment Editor")
+    self.environment_editor.grid(row=0, column=2, padx=(20, 20), pady=(20, 20), sticky="nsew")
     self.environment_editor.grid_columnconfigure(0, weight=1)
     self.environment_editor.grid_rowconfigure(0, weight=1)
     

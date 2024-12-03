@@ -1,4 +1,4 @@
-# Multigroup PSO Gui
+# Multigroup PSO GUI
 
 This application provides an interface for setting up, configuring, running, and the visualization of multigroup PSO training.
 
@@ -24,7 +24,7 @@ mgpsogui
 
 You may need to add a folder to PATH.
 
-**Note:** If you run into an error saying that PIL.Image was not able to be imported on Ubuntu please force reinstall Pillow. 
+**Note:** If you run into an error saying that PIL.Image was not able to be imported on Ubuntu please force reinstall Pillow.
 
 ```bash
 python3 -m pip install --upgrade --force-reinstall Pillow
@@ -32,7 +32,7 @@ python3 -m pip install --upgrade --force-reinstall Pillow
 
 ## Instructions for Windows
 
-Download and install Python 3.10 through the Microsoft Store, this makes Python easily accessible in Windows Terminal. 
+Download and install Python 3.10 through the Microsoft Store, this makes Python easily accessible in Windows Terminal.
 
 Once installed run this command to install the interface:
 
@@ -54,7 +54,7 @@ C:\Users\robertcordingly\AppData\Local\Packages\PythonSoftwareFoundation.Python.
 
 ## Instructions for MacOS
 
-To install Tkinter and Python 3 it is best to use Homebrew: 
+To install Tkinter and Python 3 it is best to use Homebrew:
 
 Install Homebrew
 
@@ -78,15 +78,15 @@ Then install MG PSO Gui:
 python3 -m pip install mg-pso-gui
 ```
 
-You may need to add /Library/Frameworks/Python.framework/Versions/3.8/bin to path to run the interface with 'mgpsogui,' otherwise run the interface:
+You may need to add /Library/Frameworks/Python.framework/Versions/3.10/bin to path to run the interface with 'mgpsogui,' otherwise run the interface:
 
 ```bash
-/Library/Frameworks/Python.framework/Versions/3.8/bin/mgpsogui
+/Library/Frameworks/Python.framework/Versions/3.10/bin/mgpsogui
 ```
 
 # Getting Started
 
-After getting the GUI to launch, it is first recommended to start with one of the default config files. Default config files are available here: https://drive.google.com/file/d/1Ra4Um7KgCghMidyrrLrD6wFSXJZd3zkX/view?usp=share_link 
+After getting the GUI to launch, it is first recommended to start with one of the default config files. Default config files are available here: https://drive.google.com/file/d/1Ra4Um7KgCghMidyrrLrD6wFSXJZd3zkX/view?usp=share_link
 
 To load a config simply click the "load" button in the left side bar and select the file using the file picker. After a config has been loaded, enter a service URL, and click "Connect".  If the connection is successful the other tabs on the interface will be unlocked and you will have full access to all of the interface's features.
 
@@ -98,7 +98,7 @@ Each tab of the interface serves a different purpose described here.
 
 The platform tab is where you defined the backend service used to train the model. If the service already exists, simply add the URL to the service field and press connect to get parameters from the service. After doing this the other tabs will unlock.
 
-If you do not already have a backend service deployed, the platform tab provides tools to create a local environment using Docker and Minikube. 
+If you do not already have a backend service deployed, the platform tab provides tools to create a local environment using Docker and Minikube.
 
 ## Setup
 
@@ -304,4 +304,3 @@ The Visualize tab allows you to generate a variety of different graphs and table
     ]
 }
 ```
-

@@ -24,7 +24,7 @@ class BoundsList(CTkFrame):
         self.optParams = []
         self.option_manager = option_manager
 
-        details = self.option_manager.get_service_parameters()
+        details = self.option_manager.serialize_data(self.option_manager.get("service_request_data"))
         self.paramMap = {}
         if "parameter" in details:
             for param in details["parameter"]:
@@ -76,7 +76,7 @@ class BoundsList(CTkFrame):
         CTkLabel(self.containerFrame, text="Strategy:").grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="nsew")
         row += 1
         
-        bounds = self.option_manager.get_steps()[self.step_index]["param"]
+        bounds = self.option_manager.get_steps()[self.step_index]["parameter_objects"]
         
         for bound in bounds:
             tt1 = None
@@ -115,13 +115,13 @@ class BoundsList(CTkFrame):
                 bounds_min = CTkEntry(self.containerFrame)
                 vcmd = (self.register(self.validate_number), '%P', cc, bounds_min)
                 bounds_min.grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="new")
-                bounds_min.configure(textvariable=bound["bounds"][0], validate='all', validatecommand=vcmd)
+                bounds_min.configure(textvariable=bound["min_bound"], validate='all', validatecommand=vcmd)
                 self.validate_number(bounds_min.get(), cc, bounds_min)
                             
                 bounds_max = CTkEntry(self.containerFrame)
                 vcmd = (self.register(self.validate_number), '%P', cc, bounds_max)
                 bounds_max.grid(row=row, column=3, padx=(5, 5), pady=(5, 5), sticky="new")
-                bounds_max.configure(textvariable=bound["bounds"][1], validate='all', validatecommand=vcmd)
+                bounds_max.configure(textvariable=bound["max_bound"], validate='all', validatecommand=vcmd)
                 self.validate_number(bounds_max.get(), cc, bounds_max)
                 tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
                 
@@ -132,8 +132,8 @@ class BoundsList(CTkFrame):
                 
                 if (bound_type == "list"):
                     def button_click_event(bound_index):
-                        dialog = BEW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
-                        print("Number:", dialog.get_input())
+                        BEW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
+                        #print("Number:", dialog.get_input())
 
                     open_window = lambda event=None, bound_index=index: (button_click_event(bound_index))
                     expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
@@ -167,20 +167,20 @@ class BoundsList(CTkFrame):
             
     def update_type(self, index, option):
         value = option.get()
-        self.option_manager.get_steps()[self.step_index]["param"][index]["type"].set(value)
+        self.option_manager.get_steps()[self.step_index]["parameter_objects"][index]["type"].set(value)
         self.refresh()
             
     def update_values(self, index):
-        name = self.option_manager.get_steps()[self.step_index]["param"][index]["name"].get()
+        name = self.option_manager.get_steps()[self.step_index]["parameter_objects"][index]["name"].get()
         if name in self.paramMap:
             obj = self.paramMap[name]
-            self.option_manager.get_steps()[self.step_index]["param"][index]["bounds"][0].set(obj["softmin"])
-            self.option_manager.get_steps()[self.step_index]["param"][index]["bounds"][1].set(obj["softmax"])
+            self.option_manager.get_steps()[self.step_index]["parameter_objects"][index]["min_bound"].set(obj["softmin"])
+            self.option_manager.get_steps()[self.step_index]["parameter_objects"][index]["max_bound"].set(obj["softmax"])
             
     def update_tooltips(self, index):
         try:
-            name = self.option_manager.get_steps()[self.step_index]["param"][index]["name"].get()
-            bound_type = self.option_manager.get_steps()[self.step_index]["param"][index]["type"].get()
+            name = self.option_manager.get_steps()[self.step_index]["parameter_objects"][index]["name"].get()
+            bound_type = self.option_manager.get_steps()[self.step_index]["parameter_objects"][index]["type"].get()
             
             tooltips = self.tooltip_list[index]
             t3 = tooltips[0]

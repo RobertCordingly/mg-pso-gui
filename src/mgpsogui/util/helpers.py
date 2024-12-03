@@ -45,7 +45,10 @@ def parse_pso_error(file_path, num_steps):
         lines = f.readlines()
     
     lines = [line for line in lines if 'best_cost' in line]
-    lines = [line.replace("pyswarms.single.global_best: ", "") for line in lines]
+    lines = [line.replace("pyswarms.single.global_best:", "") for line in lines]
+
+    # Add a fake line to make sure the last round is added
+    lines.append("  0% /best_cost=0")
 
     round = 1
     step = 1
@@ -53,18 +56,18 @@ def parse_pso_error(file_path, num_steps):
     round_steps = {}
     percents = []
     best_costs = []
-    in100s = False
     percent = 0
+    last_percent = 0
+    final_percent = 0
+    final_round = 0
+    final_step = 0
+
     for line in lines:
         best_cost = float(line.split('best_cost=')[1].strip())
         percent = float(line.split('%')[0].strip())
 
-        best_costs.append(best_cost)
-        percents.append(percent)
-
         # Percent is less than last percent or we are at the end of the file
-        if (percent == 100 and not in100s):
-            in100s = True
+        if (percent < last_percent):
 
             round_steps[f"Round: {round} - Step: {step}"] = {
                 "best_cost": best_costs.copy(),
@@ -74,12 +77,19 @@ def parse_pso_error(file_path, num_steps):
             best_costs = []
             percents = []
             
+            final_round = round
+            final_step = step
+
             step += 1
             if step > num_steps:
                 step = 1
                 round += 1
 
-        if percent != 100:
-            in100s = False
+            final_percent = last_percent
 
-    return {"round": round, "step": step, "percent": percent, "data": round_steps}
+        best_costs.append(best_cost)
+        percents.append(percent)
+
+        last_percent = percent
+
+    return {"round": final_round, "step": final_step, "percent": final_percent, "data": round_steps}

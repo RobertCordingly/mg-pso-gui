@@ -4,9 +4,9 @@ from customtkinter import CTkLabel
 from customtkinter import CTkButton
 from customtkinter import CTkEntry
 from customtkinter import CTkInputDialog
-from .ListParametersView import ListParametersView as ListParametersView
+from .CustomFunctionMetrics import CustomFunctionsMetricsView as ListView
 
-class BoundsEditorWindow(CTkInputDialog):
+class CustomFunctionEditorWindow(CTkInputDialog):
     """
     Dialog with extra window, message, entry widget, cancel and ok button.
     For detailed information check out the documentation.
@@ -14,7 +14,7 @@ class BoundsEditorWindow(CTkInputDialog):
 
     def __init__(self, *args,
                  step_index: 0,
-                 bound_index: 0,
+                 function_index: 0,
                  option_manager: None,
                  **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,7 +22,7 @@ class BoundsEditorWindow(CTkInputDialog):
         self.geometry("400x800")
         
         self.step_index = step_index
-        self.bound_index = bound_index  
+        self.function_index = function_index  
         self.option_manager = option_manager
         self.bounds = None
 
@@ -31,8 +31,8 @@ class BoundsEditorWindow(CTkInputDialog):
         self.grid_columnconfigure((0, 1), weight=1)
         self.rowconfigure(0, weight=1)
 
-        self.bounds = ListParametersView(
-                self, step_index=self.step_index, bound_index=self.bound_index, option_manager=self.option_manager)
+        self.bounds = ListView(
+                self, step_index=self.step_index, function_index=self.function_index, option_manager=self.option_manager)
         self.bounds.grid(row=0, column=0, columnspan=2, padx=(10, 10),
                     pady=(10, 10), sticky="nsew")
         self.bounds.grid_columnconfigure(0, weight=1)

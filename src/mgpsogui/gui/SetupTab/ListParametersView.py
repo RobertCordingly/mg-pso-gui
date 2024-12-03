@@ -26,8 +26,8 @@ class ListParametersView(CTkScrollableFrame):
         self.visual_name.set("name")
         
         
-        self.name = self.option_manager.get_steps()[self.step_index]["param"][bound_index]["name"].get()
-        self.default = self.option_manager.get_steps()[self.step_index]["param"][bound_index]["default_value"].get()
+        self.name = self.option_manager.get_steps()[self.step_index]["parameter_objects"][bound_index]["name"].get()
+        self.default = self.option_manager.get_steps()[self.step_index]["parameter_objects"][bound_index]["default_value"].get()
         try:
             if self.name != "" and self.default != "":
                 
@@ -75,8 +75,9 @@ class ListParametersView(CTkScrollableFrame):
         
     def open_csv(self):
         # Shell out to the terminal and run "open ./example.html"
-        info = self.option_manager.get_project_data()
-        folder = os.path.join(info['path'], info['name'])
+        #info = self.option_manager.get_project_data()
+        #folder = os.path.join(info['path'], info['name'])
+        folder = self.option_manager.get_project_folder()
         
         
         path = self.visual_name.get()
@@ -182,5 +183,5 @@ class ListParametersView(CTkScrollableFrame):
             
         default_values = default_values[:-1] + "]"
             
-        self.option_manager.get_steps()[self.step_index]["param"][self.bounds_index]["name"].set(visual_name)
-        self.option_manager.get_steps()[self.step_index]["param"][self.bounds_index]["default_value"].set(default_values)
+        self.option_manager.get_steps()[self.step_index]["parameter_objects"][self.bounds_index]["name"].set(visual_name)
+        self.option_manager.get_steps()[self.step_index]["parameter_objects"][self.bounds_index]["default_value"].set(default_values)

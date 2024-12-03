@@ -20,21 +20,21 @@ def create_tab(self, tab):
     tab.grid_rowconfigure(0, weight=1)
     tab.grid_rowconfigure(1, weight=200)
 
-    self.progress_container = customtkinter.CTkFrame(tab)
-    self.progress_container.grid_columnconfigure(0, weight=1)
-    self.progress_container.grid_columnconfigure(1, weight=1)
-    self.progress_container.grid_columnconfigure(2, weight=1)
-    self.progress_container.grid(row=0, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
+    #self.progress_container = customtkinter.CTkFrame(tab)
+    #self.progress_container.grid_columnconfigure(0, weight=1)
+    #self.progress_container.grid_columnconfigure(1, weight=1)
+    #self.progress_container.grid_columnconfigure(2, weight=1)
+    #self.progress_container.grid(row=0, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
     
     # Add progress bar to progress container
-    self.progress_message_left = customtkinter.CTkLabel(self.progress_container, text="")
-    self.progress_message_left.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="w")
+    #self.progress_message_left = customtkinter.CTkLabel(self.progress_container, text="")
+    #self.progress_message_left.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="w")
     
-    self.progress_message_middle = customtkinter.CTkLabel(self.progress_container, text="Calibration not running...")
-    self.progress_message_middle.grid(row=0, column=1, padx=(10, 10), pady=(10, 10), sticky="ew")
+    #self.progress_message_middle = customtkinter.CTkLabel(self.progress_container, text="Calibration not running...")
+    #self.progress_message_middle.grid(row=0, column=1, padx=(10, 10), pady=(10, 10), sticky="ew")
     
-    self.progress_message_right = customtkinter.CTkLabel(self.progress_container, text="")
-    self.progress_message_right.grid(row=0, column=2, padx=(10, 10), pady=(10, 10), sticky="e")
+    #self.progress_message_right = customtkinter.CTkLabel(self.progress_container, text="")
+    #self.progress_message_right.grid(row=0, column=2, padx=(10, 10), pady=(10, 10), sticky="e")
     
     self.textbox = customtkinter.CTkTextbox(tab)
     self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")

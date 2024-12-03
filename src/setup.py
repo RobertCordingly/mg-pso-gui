@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '0.1.151'
+VERSION = '0.2.22'
 DESCRIPTION = 'GUI for MG-PSO'
 LONG_DESCRIPTION = open('../README.md').read()
 
@@ -17,7 +17,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
     package_data={
-        'mgpsogui': ['*.json', '*.png', 'images/*.png', 'gui/images/*.png', '*.yaml'],
+        'mgpsogui': ['*.json', '*.png', 'images/*.png', 'gui/defaults/*.json', 'gui/images/*.png', '*.yaml'],
     },
     include_package_data=True,
     install_requires=['pandas', 

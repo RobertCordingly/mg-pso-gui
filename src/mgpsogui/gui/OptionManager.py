@@ -1,38 +1,95 @@
 from tkinter import StringVar as sv
-from tkinter import IntVar as iv
-from tkinter import BooleanVar as bv
-from tkinter import DoubleVar as dv
 import json
+import os
 
 class OptionManager():
     
     def __init__(self):
-        
-        self.project_data = {"name": "", "path": ""}
-        self.arguments = {"param": [],
-                 "url": sv(),
-                 "mode": sv(),
-                 "files": {},
-                 "calibration_parameters": []}
-        self.steps = []
-        self.service_parameters = {}
+
+        self._service_modes = ["Sampling: Halton", "Sampling: Random", "Sensitivity Analysis", "Optimization"]
+
+        self._default_sampling = json.load(open(os.path.join("./defaults", "sampling.json")))
+        self._default_sensitivity = json.load(open(os.path.join("./defaults", "sensitivity.json")))
+        self._default_optimization = json.load(open(os.path.join("./defaults", "optimization.json")))
+
+        self._mode_sv = sv()
+        self.init_lists()
+
+    def init_lists(self): 
+        self._project_data = {"name": "", "path": ""}
+        self._data = {}
+
+        self._mode_sv.set("Sampling: Halton")
+
+        for service in self._service_modes:
+            self._data[service] = {
+                    "url": sv(),
+                    "files": {},
+                    "steps": [],
+                    "model_parameters": [],
+                    "hyperparameters": [],
+                    "service_parameters": [],
+                    "service_request_data": [],
+                    "figure_parameters": [],
+                    "sensitivity_parameters": [],
+                    "sensitivity_positiveBestMetrics": [],
+                    "sensitivity_negativeBestMetrics": []}
             
-    def clear(self):
-        self.arguments['param'].clear()
-        self.arguments['url'].set("")
-        self.arguments['mode'].set("Optimization: MG-PSO")
-        self.arguments['files'] = {}
-        self.arguments['calibration_parameters'].clear()
-        self.steps = []
-        self.service_parameters = {}
-    
-    def add_arguments(self, arguments):
+            if service == "Sampling: Halton" or service == "Sampling: Random":
+                self._data[service]["model_parameters"] = self.deserialize_data(self._default_sampling["model_parameters"])
+                self._data[service]["hyperparameters"] = self.deserialize_data(self._default_sampling["hyperparameters"])
+                self._data[service]["service_parameters"] = self.deserialize_data(self._default_sampling["service_parameters"])
+            elif service == "Sensitivity Analysis":
+                self._data[service]["model_parameters"] = self.deserialize_data(self._default_sensitivity["model_parameters"])
+                self._data[service]["hyperparameters"] = self.deserialize_data(self._default_sensitivity["hyperparameters"])
+                self._data[service]["service_parameters"] = self.deserialize_data(self._default_sensitivity["service_parameters"])
+            elif service == "Optimization":
+                self._data[service]["model_parameters"] = self.deserialize_data(self._default_optimization["model_parameters"])
+                self._data[service]["hyperparameters"] = self.deserialize_data(self._default_optimization["hyperparameters"])
+                self._data[service]["service_parameters"] = self.deserialize_data(self._default_optimization["service_parameters"])
+
+            
+    def serialize_data(self, data):
+        if isinstance(data, dict):
+            return {key: self.serialize_data(value) for key, value in data.items()}
+        elif isinstance(data, list):
+            return [self.serialize_data(item) for item in data]
+        elif isinstance(data, sv):
+            return data.get()
+        else:
+            return data
         
-        if ("url" in arguments):
-            self.arguments["url"].set(arguments["url"])
+    def deserialize_data(self, data):
+        if isinstance(data, dict):
+            return {key: self.deserialize_data(value) for key, value in data.items()}
+        elif isinstance(data, list):
+            return [self.deserialize_data(item) for item in data]
+        elif isinstance(data, (str, int, float)):
+            return sv(value=str(data))
+        else:
+            return data
+        
+    def save_project(self, filename):
+        with open(filename, 'w') as file:
+            results = {"project_data": self._project_data, 
+                       "mode": self._mode_sv.get(),
+                       "data": self.serialize_data(self._data)}
+            json.dump(results, file)
+
+    def load_project(self, filename):
+        with open(filename, 'r') as file:
+            results = json.load(file)
+            self._project_data = results["project_data"]
+            self._mode_sv.set(results["mode"])
+            self._data = self.deserialize_data(results["data"])
+
+    def add_arguments(self, arguments):
             
         if ("mode" in arguments):
-            self.arguments["mode"].set(arguments["mode"])
+            self._data["mode"].set(arguments["mode"])
+
+        if ("url" in arguments):
+            self._data["url"][self._data["mode"].get()].set(arguments["url"])
             
         if ("files" in arguments):
             for file in arguments["files"]:
@@ -41,108 +98,165 @@ class OptionManager():
                 obj = {"name": sv(), "value": sv()}
                 obj["name"].set(name)
                 obj["value"].set(value)
-                self.arguments["files"][name] = obj
+                self._data["files"][name] = obj
         
-        for param in arguments["param"]:
+        for param in arguments["model_parameters"]:
             name = param["name"]
             value = param["value"]
             obj = {"name": sv(), "value": sv()}
             obj["name"].set(name)
             obj["value"].set(value)
-            self.arguments["param"].append(obj)
+            self._data["model_parameters"].append(obj)
             
-        for param in arguments["calibration_parameters"]:
+        for param in arguments["hyperparameters"]:
             name = param["name"]
             value = param["value"]
             obj = {"name": sv(), "value": sv()}
             obj["name"].set(name)
             obj["value"].set(value)
-            self.arguments["calibration_parameters"].append(obj)
+            self._data["hyperparameters"].append(obj)
+
+        for param in arguments["service_parameters"]:
+            name = param["name"]
+            value = param["value"]
+            obj = {"name": sv(), "value": sv()}
+            obj["name"].set(name)
+            obj["value"].set(value)
+            self._data["service_parameters"].append(obj)
             
     def add_steps(self, steps):
         for step in steps:
-            obj = {"param": [], "objfunc": [], "name": sv(), "message": sv(), "open": False}
-            obj["name"].set("Group " + str(len(self.steps) + 1))
-            obj["message"].set("Wow")
-            
-            for param in step["param"]:
-                param_obj = {
+            obj = {"parameter_objects": [], 
+                    "override_parameter": [],
+                    "objective_functions": [], 
                     "name": sv(), 
-                    "bounds": (sv(), sv()), 
-                    "default_value": sv(), 
-                    "optimal_value": sv(), 
-                    "type": sv(),
-                    "calibration_strategy": sv()
-                }
-                param_obj["name"].set(param["name"])
-                if "bounds" in param:
-                    param_obj["bounds"][0].set(param["bounds"][0])
-                    param_obj["bounds"][1].set(param["bounds"][1]) 
-                else: 
-                    param_obj["bounds"][0].set(0)
-                    param_obj["bounds"][1].set(1)
-                    
-                if "type" in param:
-                    param_obj["type"].set(param["type"])
-                else:
-                    param_obj["type"].set("float")
-                    
-                if "default_value" in param:
-                    param_obj["default_value"].set(param["default_value"])
-                else:
-                    param_obj["default_value"].set(1)
-                    
-                if "optimal_value" in param:
-                    param_obj["optimal_value"].set(param["optimal_value"])
-                else:
-                    param_obj["optimal_value"].set(0)
-                    
-                if "calibration_strategy" in param:
-                    param_obj["calibration_strategy"].set(param["calibration_strategy"])
-                else:
-                    param_obj["calibration_strategy"].set("none")
-                    
-                obj["param"].append(param_obj)
+                    "open": True}
+            obj["name"].set("Group " + str(len(self._data[self._mode_sv.get()]["steps"]) + 1))
             
-            for objfunc in step["objfunc"]:
-                objfunc_obj = {"name": sv(), "of": sv(), "weight": sv(), "data": (sv(), sv())}
-                objfunc_obj["name"].set(objfunc["name"])
-                objfunc_obj["of"].set(objfunc["of"])
-                
-                if ("weight" in objfunc): 
-                    objfunc_obj["weight"].set(objfunc["weight"])
-                else:
-                    objfunc_obj["weight"].set(1)
-                    
-                objfunc_obj["data"][0].set(objfunc["data"][0])
-                objfunc_obj["data"][1].set(objfunc["data"][1]) 
-                obj["objfunc"].append(objfunc_obj)
+            if "parameter_objects" in step:
+                for param in step["parameter_objects"]:
+                    param_obj = {
+                        "name": sv(), 
+                        "min_bound": sv(),
+                        "max_bound": sv(),
+                        "default_value": sv(), 
+                        "optimal_value": sv(), 
+                        "type": sv(),
+                        "calibration_strategy": sv()
+                    }
+                    param_obj["name"].set(param["name"])
+
+                    if "min_bound" in param:
+                        param_obj["min_bound"].set(param["min_bound"]) 
+                    else: 
+                        param_obj["min_bound"].set(0)
+
+                    if "max_bound" in param:
+                        param_obj["max_bound"].set(param["max_bound"]) 
+                    else: 
+                        param_obj["max_bound"].set(0)
+                        
+                    if "type" in param:
+                        param_obj["type"].set(param["type"])
+                    else:
+                        param_obj["type"].set("float")
+                        
+                    if "default_value" in param:
+                        param_obj["default_value"].set(param["default_value"])
+                    else:
+                        param_obj["default_value"].set(1)
+                        
+                    if "optimal_value" in param:
+                        param_obj["optimal_value"].set(param["optimal_value"])
+                    else:
+                        param_obj["optimal_value"].set(0)
+                        
+                    if "calibration_strategy" in param:
+                        param_obj["calibration_strategy"].set(param["calibration_strategy"])
+                    else:
+                        param_obj["calibration_strategy"].set("none")
+                        
+                    obj["parameter_objects"].append(param_obj)
             
-            self.steps.append(obj)
+            if "override_parameter" in step:
+                for override in step["override_parameter"]:
+                    override_obj = {"name": sv(), "value": sv()}
+                    override_obj['name'].set(override['name'])
+                    override_obj['value'].set(override['value'])
+                    obj['override_parameter'].append(override_obj)
+
+            if "objective_functions" in step:
+                for objective_function in step["objective_functions"]:
+                    objective_function_object = {"name": sv(), 
+                                    "objective_function": sv(), 
+                                    "weight": sv(), 
+                                    "custom_function": sv(),
+                                    "custom_function_goal": sv(),
+                                    "custom_function_value": sv(),
+                                    "data_observed": sv(),
+                                    "data_simulated": sv()}
+                    objective_function_object["name"].set(objective_function["name"])
+                    objective_function_object["objective_function"].set(objective_function["objective_function"])
+                    objective_function_object["custom_function_goal"].set("Positive Best")
+                    
+                    if ("weight" in objective_function): 
+                        objective_function_object["weight"].set(objective_function["weight"])
+                    else:
+                        objective_function_object["weight"].set(1)
+                        
+                    if ("custom_function" in objective_function):
+                        objective_function_object["custom_function"].set(objective_function["custom_function"])
+                    if ("custom_function_goal" in objective_function):
+                        objective_function_object["custom_function_goal"].set(objective_function["custom_function_goal"])
+                    if ("custom_function_value" in objective_function):
+                        objective_function_object["custom_function_value"].set(objective_function["custom_function_value"])
+
+                    objective_function_object["data_observed"].set(objective_function["data_observed"])
+                    objective_function_object["data_simulated"].set(objective_function["data_simulated"]) 
+                    obj["objective_functions"].append(objective_function_object)
+            
+            self._data[self._mode_sv.get()]["steps"].append(obj)
     
     def add_function(self, step_index):
-        obj = {"name": sv(), "of": sv(), "weight": sv(), "data": (sv(), sv())}
+        obj = {"name": sv(), 
+                "objective_function": sv(), 
+                "weight": sv(), 
+                "custom_function": sv(),
+                "data_observed": sv(),
+                "data_simulated": sv()}
         obj["name"].set("ns")
-        obj["of"].set("ns")
+        obj["objective_function"].set("ns")
         obj["weight"].set(1)
-        obj["data"][0].set("")
-        obj["data"][1].set("")
-        self.steps[step_index]["objfunc"].append(obj)
+        obj["data_observed"].set("")
+        obj["data_simulated"].set("")
+        obj["custom_function"].set("") 
+        
+        self._data[self._mode_sv.get()]["steps"][step_index]["objective_functions"].append(obj)
         
     def remove_function(self, step_index, index):
-        self.steps[step_index]["objfunc"].pop(index)
+        self._data[self._mode_sv.get()]["steps"][step_index]["objective_functions"].pop(index)
         
     def dupe_function(self, step_index, index):
-        my_func = self.steps[step_index]["objfunc"][index]
+        my_func = self._data[self._mode_sv.get()]["steps"][step_index]["objective_functions"][index]
         
-        new_object = {"name": sv(), "of": sv(), "weight": sv(), "data": (sv(), sv())}
+        new_object = {"name": sv(), 
+                        "objective_function": sv(), 
+                        "weight": sv(), 
+                        "custom_function": sv(),
+                        "custom_function_goal": sv(),
+                        "custom_function_value": sv(),
+                        "data_observed": sv(),
+                        "data_simulated": sv()}
         new_object["name"].set(my_func["name"].get())
-        new_object["of"].set(my_func["of"].get())
+        new_object["objective_function"].set(my_func["objective_function"].get())
         new_object["weight"].set(my_func["weight"].get())
-        new_object["data"][0].set(my_func["data"][0].get())
-        new_object["data"][1].set(my_func["data"][1].get())
+        new_object["data_observed"].set(my_func["data_observed"].get())
+        new_object["data_simulated"].set(my_func["data_simulated"].get())
+        new_object["custom_function"].set(my_func["custom_function"].get())
+        new_object["custom_function_goal"].set(my_func["custom_function_goal"].get())
+        new_object["custom_function_value"].set(my_func["custom_function_value"].get())
         
-        self.steps[step_index]["objfunc"].append(new_object)
+        self._data[self._mode_sv.get()]["steps"][step_index]["objective_functions"].append(new_object)
     
     def add_bound(self, step_index, 
                   name="name", 
@@ -154,7 +268,8 @@ class OptionManager():
                   calibration_strategy="none"):
         obj = {
             "name": sv(), 
-            "bounds": (sv(), sv()), 
+            "min_bound": sv(),
+            "max_bound": sv(),
             "default_value": sv(), 
             "optimal_value": sv(),
             "type": sv(),
@@ -165,86 +280,105 @@ class OptionManager():
         obj["default_value"].set(default_value)
         obj["optimal_value"].set(optimal_value)
         obj["calibration_strategy"].set(calibration_strategy)
-        obj["bounds"][0].set(min)
-        obj["bounds"][1].set(max)
-        self.steps[step_index]["param"].append(obj)
+        obj["min_bound"].set(min)
+        obj["max_bound"].set(max)
+        self._data[self._mode_sv.get()]["steps"][step_index]["parameter_objects"].append(obj)
         
     def remove_bound(self, step_index, index):
-        self.steps[step_index]["param"].pop(index)
+        self._data[self._mode_sv.get()]["steps"][step_index]["parameter_objects"].pop(index)
         
-    def add_argument(self, key, value):
+    def add_override(self, step_index, name, value):
         obj = {"name": sv(), "value": sv()}
+        obj["name"].set(name)
+        obj["value"].set(value)
+        self._data[self._mode_sv.get()]["steps"][step_index]["override_parameter"].append(obj)
+
+    def remove_override(self, step_index, index):
+        self._data[self._mode_sv.get()]["steps"][step_index]["override_parameter"].pop(index)
+
+    def get_override(self, step_index):
+        return self._data[self._mode_sv.get()]["steps"][step_index]["override_parameter"]
+
+    def add_key_value(self, list_name, key, value, type="string", destination="args"):
+        obj = {"name": sv(), "value": sv(), "type": sv(), "destination": sv()}
         obj["name"].set(key)
         obj["value"].set(value)
-        self.arguments["param"].append(obj)
-        
-    def add_calibration_param(self, key, value):
-        obj = {"name": sv(), "value": sv()}
-        obj["name"].set(key)
-        obj["value"].set(value)
-        self.arguments["calibration_parameters"].append(obj)
-    
-    def move_argument_up(self, index):
-        if index > 0:
-            self.arguments["param"][index], self.arguments["param"][index - 1] = self.arguments["param"][index - 1], self.arguments["param"][index]
-            
-    def move_argument_down(self, index):
-        if index < len(self.arguments["param"]) - 1:
-            self.arguments["param"][index], self.arguments["param"][index + 1] = self.arguments["param"][index + 1], self.arguments["param"][index]
+        obj["type"].set(type)
+        obj["destination"].set(destination)
+        self._data[self._mode_sv.get()][list_name].append(obj)
+
+    def remove_key_value(self, list_name, index):
+        self._data[self._mode_sv.get()][list_name].pop(index)
             
     def move_step_up(self, index):
         if index > 0:
-            self.steps[index], self.steps[index - 1] = self.steps[index - 1], self.steps[index]
+            self._data[self._mode_sv.get()]["steps"][index], self._data[self._mode_sv.get()]["steps"][index - 1] = self._data[self._mode_sv.get()]["steps"][index - 1], self._data[self._mode_sv.get()]["steps"][index]
             
     def move_step_down(self, index):
-        if index < len(self.steps) - 1:
-            self.steps[index], self.steps[index + 1] = self.steps[index + 1], self.steps[index]
+        if index < len(self._data[self._mode_sv.get()]["steps"]) - 1:
+            self._data[self._mode_sv.get()]["steps"][index], self._data[self._mode_sv.get()]["steps"][index + 1] = self._data[self._mode_sv.get()]["steps"][index + 1], self._data[self._mode_sv.get()]["steps"][index]
             
     def toggle_step_open(self, index):
-        self.steps[index]["open"] = not self.steps[index]["open"]
-            
-    def remove_argument(self, index):
-        self.arguments["param"].pop(index)
-        
-    def remove_calibration_parameter(self, index):
-        self.arguments["calibration_parameters"].pop(index)
-        
+        self._data[self._mode_sv.get()]["steps"][index]["open"] = not self._data[self._mode_sv.get()]["steps"][index]["open"]
+
     def remove_step(self, index):
-        self.steps.pop(index)
+        self._data[self._mode_sv.get()][self._mode_sv.get()]["steps"].pop(index)
             
     def get_project_data(self):
-        return self.project_data
+        return self._project_data
             
     def set_path(self, filename):
         file_name = filename.split("/")[-1].replace(".json", "")
         path = filename.replace(file_name + ".json", "")
-        self.project_data["path"] = path
-        self.project_data["name"] = file_name
+        self._project_data["path"] = path
+        self._project_data["name"] = file_name
             
-    def get_arguments(self):
-        return self.arguments
+    def get_data(self):
+        return self._data[self._mode_sv.get()]
     
     def get_steps(self):
-        return self.steps
-            
-            
+        return self._data[self._mode_sv.get()]["steps"]
+    
+    def get_mode(self):
+        return self._mode_sv.get()
+    
+    def get_mode_sv(self):
+        return self._mode_sv
+    
+    def get_service_modes(self):
+        return self._service_modes
+    
+    def get_list(self, list_name):
+        return self._data[self._mode_sv.get()][list_name]
+    
+    def get(self, key):
+        return self._data[self._mode_sv.get()][key]
+    
+    def set_data(self, key, value):
+        self._data[self._mode_sv.get()][key] = value
+
+    def set_var(self, key, value):
+        self._data[self._mode_sv.get()][key].set(value)
+        
     def get_all_as_json(self):
-        obj = {"arguments": self.arguments, "steps": self.steps}
+        obj = {"arguments": self._data, "steps": self._data[self._mode_sv.get()]["steps"]}
         return obj
     
-    def set_service_parameters(self, service_parameters):
-        self.service_parameters = service_parameters
-    
-    def get_service_parameters(self):
-        return self.service_parameters
+    def get_project_folder(self):
+        return os.path.join(self._project_data['path'], self._project_data['name'])
 
+    
     def get_metrics(self):
+
+        self._data["url"].set(self._data["urls"][self._data["mode"].get()].get())
+
         result = {}
         result['arguments'] = {}
-        result['calibration_parameters'] = []
+        result['hyperparameters'] = []
+        result['service_parameters'] = []
         result['service_parameters'] = {}
-        result['project_data'] = self.project_data
-        for key, value in self.arguments.items():
+        result['project_data'] = self._project_data
+        for key, value in self._data.items():
             if key == 'url' or key == 'mode':
                 result['arguments'][key] = value.get()
             elif key == 'files':
@@ -255,12 +389,16 @@ class OptionManager():
                 result['arguments'][key] = []
                 for obj in value:
                     result['arguments'][key].append({'name': obj['name'].get(), 'value': obj['value'].get()})
-            elif key == "calibration_parameters":
-                #result['calibration_parameters'][key] = []
+            elif key == "hyperparameters":
+                #result['hyperparameters'][key] = []
                 for obj in value:
-                    result['calibration_parameters'].append({'name': obj['name'].get(), 'value': obj['value'].get()})
+                    result['hyperparameters'].append({'name': obj['name'].get(), 'value': obj['value'].get()})
+            elif key == "service_parameters":
+                #result['service_parameters'][key] = []
+                for obj in value:
+                    result['service_parameters'].append({'name': obj['name'].get(), 'value': obj['value'].get()})
         result['steps'] = []
-        for step in self.steps:
+        for step in self._data[self._mode_sv.get()]["steps"]:
             step_result = {}
             #step_result['name'] = step['name'].get()
             #step_result['open'] = step['open']
@@ -292,14 +430,6 @@ class OptionManager():
                             'calibration_strategy': param['calibration_strategy'].get()
                         }
                     )
-                #except ValueError:
-                #    step_result['param'].append(
-                #        {
-                #            'name': param['name'].get(), 
-                #            'bounds': (param['bounds'][0].get(), 
-                #                       param['bounds'][1].get())
-                #        }
-                #    )
             step_result['objfunc'] = []
             for objfunc in step['objfunc']:
                 step_result['objfunc'].append({'name': objfunc['name'].get(), 'of': objfunc['of'].get(), 'weight': float(objfunc['weight'].get()), 'data': (objfunc['data'][0].get(), objfunc['data'][1].get())})
