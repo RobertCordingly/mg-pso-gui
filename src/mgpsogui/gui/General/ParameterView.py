@@ -38,14 +38,25 @@ class ParameterView(CTkScrollableFrame):
         self.containerFrame.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
         self.containerFrame.grid_columnconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
-        CTkLabel(self.containerFrame, text="Name:").grid(row=row, column=0, columnspan=3, padx=5, pady=5, sticky="")
-        CTkLabel(self.containerFrame, text="Value:").grid(row=row, column=3, columnspan=3, padx=5, pady=5, sticky="")
-        row += 1
+        #CTkLabel(self.containerFrame, text="Name:").grid(row=row, column=0, columnspan=3, padx=5, pady=5, sticky="")
+        #CTkLabel(self.containerFrame, text="Value:").grid(row=row, column=3, columnspan=3, padx=5, pady=5, sticky="")
+        #row += 1
         
         for key_value_pair in self.key_values:
-            CTkEntry(self.containerFrame, textvariable=self.key_values[index]["name"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="ew")
+            required = False
+            visual_name = "NONE"
+            if "required" in key_value_pair:
+                required = key_value_pair["required"].get()
+            if required and "visual_name" in key_value_pair:
+                visual_name = key_value_pair["visual_name"]
+
+            if visual_name != "NONE":
+                CTkLabel(self.containerFrame, text=visual_name.get()).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="ew")
+                #CTkEntry(self.containerFrame, state="disabled", textvariable=self.key_values[index]["visual_name"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="ew")
+            else:
+                CTkEntry(self.containerFrame, textvariable=self.key_values[index]["name"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="ew")
             
-            if self.edit_mode:
+            if self.edit_mode and not required:
                 type_menu = CTkOptionMenu(self.containerFrame, variable=self.key_values[index]["type"], values=["integer", "float", "date", "boolean", "string"], width=20)
                 type_menu.grid(row=row, column=3, columnspan=1, padx=(0, 0), pady=(5, 5), sticky="ew")
 
@@ -54,6 +65,7 @@ class ParameterView(CTkScrollableFrame):
 
 
                 return_func = lambda index=index: (self.clear(), self.option_manager.remove_key_value(self.list_name, index), self.render())
+                
                 CTkButton(self.containerFrame, text="Remove", command=return_func).grid(row=row, column=5, columnspan=1, padx=(5, 5), pady=(5, 5), sticky="ew")
             else:
                 type = self.key_values[index]["type"].get()

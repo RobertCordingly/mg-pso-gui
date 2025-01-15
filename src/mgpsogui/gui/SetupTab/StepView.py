@@ -29,7 +29,7 @@ class StepView(CTkScrollableFrame):
 
         self.render()
 
-    def refresh(self):
+    def refresh(self, *args):
         self.clear()
         self.render()
 
@@ -85,6 +85,7 @@ class StepView(CTkScrollableFrame):
 
         if (self.mode == "Sensitivity Analysis"):
             folder = self.option_manager.get_project_folder()
+            folder = os.path.join(folder, "results")
             
             # File all CSV files in folder and put them into list with strings as path
             files = []
@@ -93,8 +94,8 @@ class StepView(CTkScrollableFrame):
 
             if len(files) == 0:
                 files = ["      No CSV files found! Run sampling first!       "]
-            elif self.home_page.sensitivity_file.get() not in files:
-                self.home_page.sensitivity_file.set(files[0])
+            elif self.option_manager.get("sensitivity_analysis_path").get() not in files:
+                self.option_manager.get("sensitivity_analysis_path").set(files[0])
 
             header_padding_x = (5, 5)
             header_padding_y = (10, 10)
@@ -104,7 +105,7 @@ class StepView(CTkScrollableFrame):
             self.logo_label = CTkLabel(self.file_selector_frame, text="Select File:")
             self.logo_label.grid(row=0, column=0, padx=(10, 10), pady=header_padding_y)
             
-            self.file_selector = CTkOptionMenu(self.file_selector_frame, values=files, width=50, variable=self.home_page.sensitivity_file)
+            self.file_selector = CTkOptionMenu(self.file_selector_frame, values=files, width=50, variable=self.option_manager.get("sensitivity_analysis_path"), command=self.refresh)
             self.file_selector.grid(row=0, column=1, padx=(10, 10), pady=header_padding_y)
 
             row += 1
@@ -119,7 +120,9 @@ class StepView(CTkScrollableFrame):
             self.logo_label2 = CTkLabel(self.file_selector_frame, text="Output:")
             self.logo_label2.grid(row=0, column=1, padx=(20, 10), pady=header_padding_y)
 
-            self.output_method = CTkOptionMenu(self.file_selector_frame, values=["Replace", "Append"], width=50, variable=self.home_page.sampling_output)
+            self.output_method = CTkOptionMenu(self.file_selector_frame, values=["Replace", "Append"], width=50, variable=self.option_manager.get("sampling_output_mode"))
+            if self.option_manager.get("sampling_output_mode").get() == "":
+                self.option_manager.get("sampling_output_mode").set("Replace")
             self.output_method.grid(row=0, column=2, padx=(10, 10), pady=header_padding_y)
 
             row += 1

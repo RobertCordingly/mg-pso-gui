@@ -13,6 +13,8 @@ import json
 import PIL
 from PIL import Image
 import os
+import pandas as pd
+from tkinter.filedialog import askopenfilename
 
 class BoundsList(CTkFrame):
     def __init__(self, *args,
@@ -21,19 +23,7 @@ class BoundsList(CTkFrame):
                  **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.optParams = []
         self.option_manager = option_manager
-
-        details = self.option_manager.serialize_data(self.option_manager.get("service_request_data"))
-        self.paramMap = {}
-        if "parameter" in details:
-            for param in details["parameter"]:
-                self.paramMap[param["name"]] = param
-                if "min" in param:
-                    self.optParams.append(param["name"])
-                    
-            self.optParams.sort()
-        
 
         self.edit_mode = False
         self.tooltip_list = []
@@ -62,6 +52,34 @@ class BoundsList(CTkFrame):
         index = 0
         
         self.tooltip_list = []
+
+        mode = self.option_manager.get_mode()
+
+        # Load bound parameters depending on the mode
+        self.optParams = []
+        if mode == "Optimization" or mode == "Sampling: Halton" or mode == "Sampling: Random":
+            details = self.option_manager.serialize_data(self.option_manager.get("service_request_data"))
+            self.paramMap = {}
+            if "parameter" in details:
+                for param in details["parameter"]:
+                    self.paramMap[param["name"]] = param
+                    if "min" in param:
+                        self.optParams.append(param["name"])
+                        
+                self.optParams.sort()
+        elif mode == "Sensitivity Analysis":
+            file_path = self.option_manager.get("sensitivity_analysis_path").get()
+            folder = self.option_manager.get_project_folder()
+            file_path = os.path.join(folder, "results", file_path)
+            if os.path.exists(file_path):
+                try:
+                    df = pd.read_csv(file_path)
+                    self.optParams = df.columns.tolist()
+                except Exception as e:
+                    print(f"Error loading CSV file: {e}")
+            else:
+                print(f"File does not exist: {file_path}")
+
         
         self.containerFrame = CTkFrame(self, fg_color="transparent")
         self.containerFrame.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
@@ -71,9 +89,13 @@ class BoundsList(CTkFrame):
         
         CTkLabel(self.containerFrame, text="Type:").grid(row=row, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
         CTkLabel(self.containerFrame, text="Name:").grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="nsew")
-        CTkLabel(self.containerFrame, text="Bounds:").grid(row=row, column=2, columnspan=2, padx=(5, 5), pady=(5, 5), sticky="nsew")
-        CTkLabel(self.containerFrame, text="Default:").grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="nsew")
-        CTkLabel(self.containerFrame, text="Strategy:").grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="nsew")
+
+        if mode != "Sensitivity Analysis":
+            CTkLabel(self.containerFrame, text="Bounds:").grid(row=row, column=2, columnspan=2, padx=(5, 5), pady=(5, 5), sticky="nsew")
+
+            if mode == "Optimization":
+                CTkLabel(self.containerFrame, text="Default:").grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="nsew")
+                CTkLabel(self.containerFrame, text="Strategy:").grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="nsew")
         row += 1
         
         bounds = self.option_manager.get_steps()[self.step_index]["parameter_objects"]
@@ -112,6 +134,12 @@ class BoundsList(CTkFrame):
                 bb.grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="new")
                 ctt(bb, delay=0.1, alpha=0.95, message="Delete this bound...")
             else:
+                
+                if mode == "Sensitivity Analysis":
+                    row += 1
+                    index += 1
+                    continue
+
                 bounds_min = CTkEntry(self.containerFrame)
                 vcmd = (self.register(self.validate_number), '%P', cc, bounds_min)
                 bounds_min.grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="new")
@@ -125,21 +153,34 @@ class BoundsList(CTkFrame):
                 self.validate_number(bounds_max.get(), cc, bounds_max)
                 tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
                 
-                default_value = CTkEntry(self.containerFrame)
-                default_value.grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="new")
-                default_value.configure(textvariable=bound["default_value"])
-            
-                
                 if (bound_type == "list"):
                     def button_click_event(bound_index):
                         BEW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
-                        #print("Number:", dialog.get_input())
 
                     open_window = lambda event=None, bound_index=index: (button_click_event(bound_index))
                     expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
                     button = CTkButton(self.containerFrame, width=30, text=None, image=expand_image, command=open_window)
                     button.grid(row=row, column=6, padx=(5, 5), pady=(5, 5), sticky="new")
                 
+                if mode == "Sampling: Random" or mode == "Sampling: Halton":
+                    
+                    tt1 = ctt(bounds_min, delay=0.1, alpha=0.95, message="...")
+                    tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
+                    if cc is not None:
+                        tt3 = ctt(cc, delay=0.1, alpha=0.95, message="...")
+                            
+                    self.tooltip_list.append([tt3, tt1, tt2])
+                            
+                    self.update_tooltips(index)
+
+                    row += 1
+                    index += 1
+                    continue
+
+                default_value = CTkEntry(self.containerFrame)
+                default_value.grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="new")
+                default_value.configure(textvariable=bound["default_value"])
+
                 calibration_strat = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['none', 'mean', 'single'], variable=bound["calibration_strategy"])
                 calibration_strat.grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="new")
                 
@@ -161,9 +202,31 @@ class BoundsList(CTkFrame):
                 CTkButton(self.containerFrame, text="Exit", command=self.toggle_edit_mode).grid(row=row, column=0, padx=(5, 5), pady=(5, 5), sticky="new")
             else:
                 CTkButton(self.containerFrame, text="Edit", command=self.toggle_edit_mode).grid(row=row, column=0, padx=(5, 5), pady=(5, 5), sticky="new")
-            CTkButton(self.containerFrame, text="Add Bound", command=add_func).grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="new")
-        else:
-            CTkButton(self.containerFrame, text="Add Bound", command=add_func).grid(row=row, column=0, columnspan=2, padx=(5, 5), pady=(5, 5), sticky="new")
+        
+        CTkButton(self.containerFrame, text="Add Bound", command=add_func).grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="new")
+
+        def import_csv():
+            filename = askopenfilename(filetypes=[("CSV", "*.csv")], title="Open Bound CSV", multiple=False)
+            print(filename)
+
+            # Open CSV file
+            if filename is not None and filename != "":
+                df = pd.read_csv(filename)
+                for _, row in df.iterrows():
+                    if "name" not in row:
+                        continue
+                    name = row["name"] if "name" in row else "name"
+                    type_ = row["type"] if "type" in row else "custom"
+                    min_bound = row["min_bound"] if "min_bound" in row else 0
+                    max_bound = row["max_bound"] if "max_bound" in row else 1
+                    default_value = row["default_value"] if "default_value" in row else 1
+                    calibration_strategy = row["calibration_strategy"] if "calibration_strategy" in row else "none"
+                    self.option_manager.add_bound(step_index=self.step_index, name=name, min=min_bound, max=max_bound, type=type_, default_value=default_value, calibration_strategy=calibration_strategy)
+
+            self.clear()
+            self.render()
+
+        CTkButton(self.containerFrame, text="Import CSV", command=import_csv).grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="new")
             
     def update_type(self, index, option):
         value = option.get()

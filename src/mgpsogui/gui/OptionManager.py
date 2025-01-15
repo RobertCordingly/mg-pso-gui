@@ -33,7 +33,34 @@ class OptionManager():
                     "figure_parameters": [],
                     "sensitivity_parameters": [],
                     "sensitivity_positiveBestMetrics": [],
-                    "sensitivity_negativeBestMetrics": []}
+                    "sensitivity_negativeBestMetrics": [],
+
+                    "sensitivity_analysis_path": sv(),
+                    "sampling_output_mode": sv(),
+                    "selected_graph": sv(),
+                    "graph_theme": sv(),
+                    "selected_csv": sv(),
+                    "selected_csv2": sv(),
+                    "selected_x": sv(),
+                    "selected_y1": sv(),
+                    "selected_y2": sv(),
+                    "figure_style": sv(),
+                    "matrix_values": []
+                }
+            
+            self._data[service]["sensitivity_analysis_path"].set("No file selected...")
+            self._data[service]["sampling_output_mode"].set("Replace")
+            self._data[service]["selected_graph"].set("None")
+            self._data[service]["graph_theme"].set("Dark")
+            self._data[service]["selected_csv"].set("No files found...")
+            self._data[service]["selected_csv2"].set("No files found...")
+            self._data[service]["selected_x"].set("time")
+            self._data[service]["selected_y1"].set("NONE")
+            self._data[service]["selected_y2"].set("NONE")
+            self._data[service]["figure_style"].set("Scatter")
+            self._data[service]["matrix_values"].append(sv())
+            self._data[service]["matrix_values"][0].set("NONE")
+
             
             if service == "Sampling: Halton" or service == "Sampling: Random":
                 self._data[service]["model_parameters"] = self.deserialize_data(self._default_sampling["model_parameters"])
@@ -76,12 +103,24 @@ class OptionManager():
                        "data": self.serialize_data(self._data)}
             json.dump(results, file)
 
+    def get_all_data(self):
+        return self.serialize_data(self._data)
+
     def load_project(self, filename):
+        self.init_lists()
+
         with open(filename, 'r') as file:
             results = json.load(file)
-            self._project_data = results["project_data"]
+            new_project_data = results["project_data"]
+            for key, value in new_project_data.items():
+                self._project_data[key] = value
             self._mode_sv.set(results["mode"])
-            self._data = self.deserialize_data(results["data"])
+            new_data = self.deserialize_data(results["data"])
+
+            for service in self._service_modes:
+                for key, value in new_data[service].items():
+                    self._data[service][key] = value
+
 
     def add_arguments(self, arguments):
             
@@ -243,8 +282,6 @@ class OptionManager():
                         "objective_function": sv(), 
                         "weight": sv(), 
                         "custom_function": sv(),
-                        "custom_function_goal": sv(),
-                        "custom_function_value": sv(),
                         "data_observed": sv(),
                         "data_simulated": sv()}
         new_object["name"].set(my_func["name"].get())
@@ -253,8 +290,6 @@ class OptionManager():
         new_object["data_observed"].set(my_func["data_observed"].get())
         new_object["data_simulated"].set(my_func["data_simulated"].get())
         new_object["custom_function"].set(my_func["custom_function"].get())
-        new_object["custom_function_goal"].set(my_func["custom_function_goal"].get())
-        new_object["custom_function_value"].set(my_func["custom_function_value"].get())
         
         self._data[self._mode_sv.get()]["steps"][step_index]["objective_functions"].append(new_object)
     
@@ -332,6 +367,9 @@ class OptionManager():
         path = filename.replace(file_name + ".json", "")
         self._project_data["path"] = path
         self._project_data["name"] = file_name
+
+    def copy_list(self, source_mode):
+        self._data[self._mode_sv.get()] = self._data[source_mode]
             
     def get_data(self):
         return self._data[self._mode_sv.get()]

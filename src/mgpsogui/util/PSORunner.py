@@ -30,53 +30,72 @@ def run_process(stdout_queue, stderr_queue, results_queue, data, folder, mode):
         folder (_type_): _description_
         mode (_type_): _description_
     """
+    try:
+        # Setup folders
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
-    # Setup folders
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+        if not os.path.exists(os.path.join(folder, "results")):
+            os.makedirs(os.path.join(folder, "results"))
 
-    if not os.path.exists(os.path.join(folder, "results")):
-        os.makedirs(os.path.join(folder, "results"))
+        if (os.path.exists(os.path.join(folder, 'output.txt'))):
+            os.remove(os.path.join(folder, 'output.txt'))
+            
+        if (os.path.exists(os.path.join(folder, 'error.txt'))):
+            os.remove(os.path.join(folder, 'error.txt'))
 
-    if (os.path.exists(os.path.join(folder, 'output.txt'))):
-        os.remove(os.path.join(folder, 'output.txt'))
+        # Redirect stdout and stderr to files
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
         
-    if (os.path.exists(os.path.join(folder, 'error.txt'))):
-        os.remove(os.path.join(folder, 'error.txt'))
+        read_stdout, write_stdout = os.pipe()
+        read_stderr, write_stderr = os.pipe()
+        
+        sys.stdout = os.fdopen(write_stdout, 'w')
+        sys.stderr = os.fdopen(write_stderr, 'w')
+        
+        stdout_thread = threading.Thread(target=enqueue_output, args=(os.fdopen(read_stdout, 'r'), stdout_queue))
+        stderr_thread = threading.Thread(target=enqueue_output, args=(os.fdopen(read_stderr, 'r'), stderr_queue))
+        stdout_thread.daemon = True
+        stderr_thread.daemon = True
+        stdout_thread.start()
+        stderr_thread.start()
 
-    # Redirect stdout and stderr to files
-    old_stdout = sys.stdout
-    old_stderr = sys.stderr
-    
-    read_stdout, write_stdout = os.pipe()
-    read_stderr, write_stderr = os.pipe()
-    
-    sys.stdout = os.fdopen(write_stdout, 'w')
-    sys.stderr = os.fdopen(write_stderr, 'w')
-    
-    stdout_thread = threading.Thread(target=enqueue_output, args=(os.fdopen(read_stdout, 'r'), stdout_queue))
-    stderr_thread = threading.Thread(target=enqueue_output, args=(os.fdopen(read_stderr, 'r'), stderr_queue))
-    stdout_thread.daemon = True
-    stderr_thread.daemon = True
-    stdout_thread.start()
-    stderr_thread.start()
+        if mode == "Sampling: Halton":
+            run_sampling(data, "halton", folder, results_queue)
+        elif mode == "Sampling: Random":
+            run_sampling(data, "random", folder, results_queue)
+        elif mode == "Sensitivity Analysis":
+            run_sensitivity_analysis(data, folder, results_queue)
+        elif mode == "Optimization":
+            run_optimization(data, folder, results_queue)
+        else:
+            print("Invalid mode")
 
-    if mode == "Sampling: Halton":
-        run_sampling(data, "halton", folder, results_queue)
-    elif mode == "Sampling: Random":
-        run_sampling(data, "random", folder, results_queue)
-    elif mode == "Sensitivity Analysis":
-        run_sensitivity_analysis(data, folder, results_queue)
-    elif mode == "Optimization":
-        run_optimization(data, folder, results_queue)
-    else:
-        print("Invalid mode")
+        stdout_thread.join()
+        stderr_thread.join()
+        
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr
 
-    stdout_thread.join()
-    stderr_thread.join()
-    
-    sys.stdout = old_stdout
-    sys.stderr = old_stderr
+    except Exception as e:
+        print("An exception occurred: ", flush=True)
+        print(str(e))
+        # Print stack trace
+        import traceback
+        traceback.print_exc()
+
+        # Write all of this information to a crash file
+        with open(os.path.join(folder, 'crash.txt'), 'w') as f:
+            f.write(str(e))
+            f.write("\n")
+            traceback.print_exc(file=f)
+    finally:
+        stdout_thread.join()
+        stderr_thread.join()
+        
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr
 
 def process_list(data, parameter_map, args, options, oh_strategy, config, metainfo, list_name):
     """_summary_
@@ -105,7 +124,7 @@ def process_list(data, parameter_map, args, options, oh_strategy, config, metain
             converted_value = True if converted_value == "True" else False
 
         if destination == "args":
-            args['param'].append((name, obj['value']))
+            args['param'].append({"name": name, "value": converted_value})
         elif destination == "kwargs":
             parameter_map[name] = original_value
         elif destination == "conf":    
@@ -174,7 +193,7 @@ def pp(parameter, parameter_map, default=None):
     Returns:
         _type_: _description_
     """
-    if parameter in parameter_map.keys:
+    if parameter in parameter_map.keys():
         if parameter_map[parameter] != ""  \
         and parameter_map[parameter] != "None" \
         and parameter_map[parameter] != "null" \
@@ -211,7 +230,30 @@ def run_sampling(data, mode, folder, results_queue):
 
     output_steps = process_steps(data)
 
-    config['step_trace'] = os.path.join(folder, 'pso_step_trace.json')
+    trace_file = os.path.join(folder, 'results', mode + '_trace.csv')
+    file_output_mode = data["sampling_output_mode"]
+    if file_output_mode == "Append":
+        # Backup trace file if it exists
+        if os.path.exists(trace_file):
+            shutil.copyfile(trace_file, trace_file + ".bak")
+        
+    #config['step_trace'] = os.path.join(folder, 'pso_step_trace.json') # Do we need this?
+
+    print("Parsing Parameters...\n", flush=True)
+    print("steps: ", flush=True)
+    print(json.dumps(output_steps, indent=4))
+    print("args: ", flush=True)
+    print(json.dumps(args, indent=4))
+    print("options: ", flush=True)
+    print(json.dumps(options, indent=4))
+    print("oh_strategy: ", flush=True)
+    print(json.dumps(oh_strategy, indent=4))
+    print("config: ", flush=True)
+    print(json.dumps(config, indent=4))
+    print("metainfo: ", flush=True)
+    print(json.dumps(metainfo, indent=4))
+    print("kwargs: ", flush=True)
+    print(json.dumps(parameter_map, indent=4))
 
     print("Running Sampling..\n", flush=True)
     trace = run_sampler(output_steps, 
@@ -221,11 +263,33 @@ def run_sampling(data, mode, folder, results_queue):
                         mode, 
                         conf=config, 
                         metainfo=metainfo if len(metainfo) > 0 else None,
-                        trace_file=os.path.join(folder, 'results', mode + '_trace.csv'),
-                        offset=pp('offset', parameter_map))
+                        trace_file=trace_file,
+                        offset=int(pp('offset', parameter_map)))
     results_queue.put(trace)
     print(trace, flush=True)
     print("\n", flush=True)
+
+    if file_output_mode == "Append" and os.path.exists(trace_file + ".bak"):
+        # Read the backup file
+        with open(trace_file + ".bak", 'r') as f2:
+            backup_lines = f2.readlines()
+        
+        # Read the trace file
+        with open(trace_file, 'r') as f:
+            trace_lines = f.readlines()
+        
+        # Extract headers
+        backup_header = backup_lines[0]
+        trace_header = trace_lines[0]
+        
+        # Combine data ensuring headers are not duplicated
+        with open(trace_file, 'w') as f:
+            f.write(backup_header)
+            f.writelines(backup_lines[1:])
+            f.writelines(trace_lines[1:] if trace_header == backup_header else trace_lines)
+        
+        # Remove the backup file
+        os.remove(trace_file + ".bak")
 
 def run_optimization(data, folder, results_queue):
     """_summary_
@@ -253,6 +317,22 @@ def run_optimization(data, folder, results_queue):
     output_steps = process_steps(data)
 
     config['step_trace'] = os.path.join(folder, 'pso_step_trace.json')
+
+    print("Parsing Parameters...\n", flush=True)
+    print("steps: ", flush=True)
+    print(json.dumps(output_steps, indent=4))
+    print("args: ", flush=True)
+    print(json.dumps(args, indent=4))
+    print("options: ", flush=True)
+    print(json.dumps(options, indent=4))
+    print("oh_strategy: ", flush=True)
+    print(json.dumps(oh_strategy, indent=4))
+    print("config: ", flush=True)
+    print(json.dumps(config, indent=4))
+    print("metainfo: ", flush=True)
+    print(json.dumps(metainfo, indent=4))
+    print("kwargs: ", flush=True)
+    print(json.dumps(parameter_map, indent=4))
 
     print("Running MG-PSO Optimization...\n", flush=True)
     optimizer, trace = global_best(output_steps,   

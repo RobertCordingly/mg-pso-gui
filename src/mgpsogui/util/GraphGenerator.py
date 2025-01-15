@@ -65,9 +65,8 @@ theme_plot_color_pallet = [
 def generate_graphs(HomePage):
 
     try:
-        selected_graph = HomePage.graph_selector_value.get()
-        info = HomePage.option_manager.get_project_data()
-        folder = os.path.join(info['path'], info['name'])
+        selected_graph = HomePage.option_manager.get("selected_graph").get()
+        folder = HomePage.option_manager.get_project_folder()
         if not os.path.exists(folder):
             os.makedirs(folder)
             
@@ -106,13 +105,14 @@ def generate_graphs(HomePage):
         HomePage.graph_image = customtkinter.CTkImage(HomePage.graph_image_obj, size=(HomePage.image_width * HomePage.image_scale, HomePage.image_height * HomePage.image_scale))
         HomePage.graph_label.configure(image=HomePage.graph_image)
     except Exception as e:
-        print(f"An exception occurred in Graph Generator: {str(e)}")
-        print(f"Exception type: {type(e).__name__}")
-        print("Traceback:")
-        traceback.print_exc()
+        #print(f"An exception occurred in Graph Generator: {str(e)}")
+        #print(f"Exception type: {type(e).__name__}")
+        #print("Traceback:")
+        #traceback.print_exc()
+        pass
 
 def best_cost_stacked(homepage, config, data, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
     fig = go.Figure()
         
@@ -183,7 +183,7 @@ def best_cost_stacked(homepage, config, data, option_manager):
         return fig
 
 def table(homepage, config, dataframe, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
     # Create a plotly table with the values in the dataframe
     fig = go.Figure(data=[go.Table(
@@ -256,7 +256,7 @@ def table(homepage, config, dataframe, option_manager):
     return fig
 
 def best_cost_by_round(homepage, config, data, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
     fig = go.Figure()
         
@@ -362,7 +362,7 @@ def best_cost_by_round(homepage, config, data, option_manager):
     return fig
 
 def calibrated_params_by_round(homepage, config, list_of_objs, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
     fig = go.Figure()
         
@@ -451,15 +451,15 @@ def calibrated_params_by_round(homepage, config, list_of_objs, option_manager):
     return fig
 
 def custom_csv(homepage, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
     fig = go.Figure()
 
     data = homepage.csv_data["data"]
 
-    x = homepage.csv_x_selector.get()
-    val = homepage.csv_y1_selector.get()
-    val2 = homepage.csv_y2_selector.get()
+    x = option_manager.get("selected_x").get()
+    val = option_manager.get("selected_y1").get()
+    val2 = option_manager.get("selected_y2").get()
     
     xx = None
     if x == "time":
@@ -547,16 +547,16 @@ def custom_csv(homepage, option_manager):
     return fig
 
 def compare_csv(homepage, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
     fig = go.Figure()
 
     data = homepage.csv_data["data"]
     data2 = homepage.csv_data2["data"]
 
-    x = homepage.csv_x_selector.get()
-    val = homepage.csv_y1_selector.get()
-    val2 = homepage.csv_y2_selector.get()
+    x = option_manager.get("selected_x").get()
+    val = option_manager.get("selected_y1").get()
+    val2 = option_manager.get("selected_y2").get()
     
     xx = None
     if x == "time":
@@ -652,17 +652,17 @@ def compare_csv(homepage, option_manager):
     return fig
 
 def sampling_csv(homepage, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
     fig = go.Figure()
 
-    style = homepage.figure_style.get()
+    style = option_manager.get("figure_style").get()
 
     data = homepage.csv_data
 
-    x = homepage.csv_x_selector.get()
-    val = homepage.csv_y1_selector.get()
-    val2 = homepage.csv_y2_selector.get()
+    x = option_manager.get("selected_x").get()
+    val = option_manager.get("selected_y1").get()
+    val2 = option_manager.get("selected_y2").get()
     
     xx = None
     if x == "time":
@@ -759,14 +759,14 @@ def sampling_csv(homepage, option_manager):
     return fig
 
 def matrix_editor(homepage, option_manager):
-    theme = homepage.graph_theme_value.get()
+    theme = homepage.option_manager.get("graph_theme").get()
 
-    style = homepage.figure_style.get()
+    style = option_manager.get("figure_style").get()
     data = homepage.csv_data
-    x = homepage.csv_x_selector.get()
+    x = option_manager.get("selected_x").get()
 
     all_figures = []
-    figure_parameters = option_manager.get_arguments()['figure_parameters']
+    figure_parameters = option_manager.get('figure_parameters')
 
     #color_list = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52']
     color_index = 0

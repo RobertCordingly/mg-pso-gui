@@ -32,7 +32,7 @@ class OverrideParameterMetrics(CTkScrollableFrame):
         self.edit_mode = not self.edit_mode
         self.render()
         
-    def add_key(self, key="name", value="value"):
+    def add_key(self, key="iters", value="1"):
         self.option_manager.add_override(self.step_index, key, value)
         
     def remove_key(self, index):

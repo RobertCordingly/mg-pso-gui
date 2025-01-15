@@ -80,7 +80,7 @@ def create_tab(self, tab):
             subprocess.Popen(["open", os.path.join(folder, self.selected_graph_name + "_package")])
         else:
             subprocess.Popen(["xdg-open", os.path.join(folder, self.selected_graph_name + "_package")])
-    
+
     def _resize_image(event):
         self.graph_label.update_idletasks()
         new_width = self.graph_label.winfo_width()
@@ -116,7 +116,8 @@ def create_tab(self, tab):
     self.graph_container.grid_columnconfigure(0, weight=1)
     self.graph_container.grid_rowconfigure(0, weight=1)
     
-    self.graph_selector = customtkinter.CTkOptionMenu(self.graph_sidebar, values=["Best Cost Stacked", "Best Cost by Round", "Custom CSV", "Compare CSV", "Sampling CSV", "Matrix Editor"], variable=self.graph_selector_value, command=self.update_graph)
+    graph_types = []
+    self.graph_selector = customtkinter.CTkOptionMenu(self.graph_sidebar, values=graph_types, variable=self.option_manager.get("selected_graph"), command=self.update_graph)
     self.graph_selector.grid(row=0, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
     
     # Create SideBar
@@ -124,7 +125,7 @@ def create_tab(self, tab):
     self.vis_sidebar.grid(row=1, column=0, rowspan=6, padx=(0, 0), pady=(0, 0), sticky="nsew")
     
 
-    self.graph_theme = customtkinter.CTkOptionMenu(self.graph_sidebar, values=["Dark", "Light", "Publication"], variable=self.graph_theme_value, command=self.update_graph)
+    self.graph_theme = customtkinter.CTkOptionMenu(self.graph_sidebar, values=["Dark", "Light", "Publication"], variable=self.option_manager.get("graph_theme"), command=self.update_graph)
     self.graph_theme.grid(row=7, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
 
     self.graph_export = customtkinter.CTkButton(self.graph_sidebar, text="Export", command=export_graph)
@@ -138,5 +139,3 @@ def create_tab(self, tab):
     self.graph_image = customtkinter.CTkImage(self.graph_image_obj, size=(1280, 720))
     self.graph_label = customtkinter.CTkLabel(self.graph_container, text=None, image=self.graph_image)
     self.graph_label.grid(row=0, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
-    #window = customtkinter.CTk()
-    #self.graph_label.bind('<Configure>', _resize_image)

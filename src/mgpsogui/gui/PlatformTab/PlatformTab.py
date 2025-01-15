@@ -175,17 +175,17 @@ def create_tab(self, tab):
     self.environment_editor.grid_columnconfigure(0, weight=1)
     self.environment_editor.grid_rowconfigure(0, weight=1)
     
-    cl = customtkinter.CTkLabel(self.environment_editor, text="Cluster Preset:", anchor="w")
-    cl.grid(row=0, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+    #cl = customtkinter.CTkLabel(self.environment_editor, text="Cluster Preset:", anchor="w")
+    #cl.grid(row=0, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
     
-    self.preset_selector = customtkinter.CTkOptionMenu(self.environment_editor, values=["Local", "Other"])
-    self.preset_selector.grid(row=1, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+    #self.preset_selector = customtkinter.CTkOptionMenu(self.environment_editor, values=["Optimization", "Sampling", "Sensitivity Analysis"])
+    #self.preset_selector.grid(row=1, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
     
     cl = customtkinter.CTkLabel(self.environment_editor, text="Controls:", anchor="w")
-    cl.grid(row=2, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+    cl.grid(row=0, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
     
     self.start_cluster_button = customtkinter.CTkButton(self.environment_editor, text="Start Minikube", command=start_cluster)
-    self.start_cluster_button.grid(row=3, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+    self.start_cluster_button.grid(row=1, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
     
     # Check if the os is MacOS
     if (platform.system() == "Darwin"):
@@ -193,16 +193,16 @@ def create_tab(self, tab):
     else:
         self.create_environment_button = customtkinter.CTkButton(self.environment_editor, text="Copy Command", command=deploy_cluster)
         
-    self.create_environment_button.grid(row=4, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+    self.create_environment_button.grid(row=2, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
     
     self.get_status = customtkinter.CTkButton(self.environment_editor, text="Minikube Status", command=cluster_status)
-    self.get_status.grid(row=5, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+    self.get_status.grid(row=3, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
     
     self.destroy_environment_button = customtkinter.CTkButton(self.environment_editor, text="Stop Minikube", command=stop_cluster)
-    self.destroy_environment_button.grid(row=6, column=0, padx=(20, 20), pady=(5,10), sticky="ew")
+    self.destroy_environment_button.grid(row=4, column=0, padx=(20, 20), pady=(5,10), sticky="ew")
     
     cl = customtkinter.CTkLabel(self.environment_editor, text="Minikube Status:", anchor="w")
-    cl.grid(row=7, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+    cl.grid(row=5, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
     
     self.custer_details = customtkinter.CTkTextbox(self.environment_editor, height=480)
-    self.custer_details.grid(row=8, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")
+    self.custer_details.grid(row=6, column=0, padx=(20, 20), pady=(5, 5), sticky="ew")

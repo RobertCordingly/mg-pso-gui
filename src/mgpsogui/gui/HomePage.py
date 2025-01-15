@@ -20,6 +20,7 @@ from PIL import Image, ImageTk
 import traceback
 from multiprocessing import Process
 from multiprocessing import Queue
+
 import re
 import pandas as pd
 import numpy as np
@@ -28,6 +29,8 @@ import platform
 import time
 
 from queue import Empty
+
+from .General.NoticeWindow import NoticeWindow as NW
 
 from ..util import PSORunner
 from ..util import GraphGenerator
@@ -63,46 +66,37 @@ class App(customtkinter.CTk):
 		
 		self.option_manager = om.OptionManager()
 		
-		self.graph_selector_value = tk.StringVar()
-		self.graph_selector_value.set("Best Cost Stacked")
+		# self.graph_selector_value = tk.StringVar()
+		# self.graph_selector_value.set("Best Cost Stacked")
 
-		self.graph_theme_value = tk.StringVar()
-		self.graph_theme_value.set("Dark")
+		# self.graph_theme_value = tk.StringVar()
+		# self.graph_theme_value.set("Dark")
 
-		self.selected_csv = tk.StringVar()
-		self.selected_csv.set("No files found...")
+		# self.selected_csv = tk.StringVar()
+		# self.selected_csv.set("No files found...")
 		self.open_file = "None"
 		self.csv_data = None
 
-		self.sensitivity_file = tk.StringVar()
-		self.sensitivity_file.set("No files found...")
-
-		self.sampling_method = tk.StringVar()
-		self.sampling_method.set("Halton")
-
-		self.sampling_output = tk.StringVar()
-		self.sampling_output.set("Replace")
-
-		self.selected_csv2 = tk.StringVar()
-		self.selected_csv2.set("No files found...")
+		# self.selected_csv2 = tk.StringVar()
+		# self.selected_csv2.set("No files found...")
 		self.open_file2 = "None"
 		self.csv_data2 = None
 
-		self.selected_x = tk.StringVar()
-		self.selected_x.set("time")
+		# self.selected_x = tk.StringVar()
+		# self.selected_x.set("time")
 
-		self.selected_y1 = tk.StringVar()
-		self.selected_y1.set("NONE")
+		# self.selected_y1 = tk.StringVar()
+		# self.selected_y1.set("NONE")
 
-		self.selected_y2 = tk.StringVar()
-		self.selected_y2.set("NONE")
+		# self.selected_y2 = tk.StringVar()
+		# self.selected_y2.set("NONE")
 
-		self.figure_style = tk.StringVar()
-		self.figure_style.set("Scatter")
+		# self.figure_style = tk.StringVar()
+		# self.figure_style.set("Scatter")
 
-		self.matrix_values = []
-		self.matrix_values.append(tk.StringVar())
-		self.matrix_values[0].set("NONE")
+		# self.matrix_values = []
+		# self.matrix_values.append(tk.StringVar())
+		# self.matrix_values[0].set("NONE")
 
 		self.running_config = None
 		self.selected_graph_name = None
@@ -159,7 +153,10 @@ class App(customtkinter.CTk):
 																command=self.change_scaling_event)
 		self.scaling_optionemenu.grid(row=0, column=8, padx=(5, 20), pady=header_padding_y)
 		self.scaling_optionemenu.set("100%")
-		
+
+		self.help_button = customtkinter.CTkButton(self.sidebar_frame, text="Help", width=20, command=self.open_help)
+		self.help_button.grid(row=0, column=9, padx=header_padding_x, pady=header_padding_y)
+
 		expand_image = customtkinter.CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
 		#self.new_window = customtkinter.CTkButton(self.sidebar_frame, text=None, width=30, image=expand_image, command=self.open_new_window)
 		#ctt(self.new_window, delay=0.1, alpha=0.95, message="Open New Window")
@@ -169,7 +166,7 @@ class App(customtkinter.CTk):
 		self.tabview.grid(row=1, column=0, padx=(0, 0), pady=(10, 10), sticky="nsew")
 		tab1 = "Platform"
 		tab2 = "Setup"
-		tab3 = "Logs"
+		tab3 = "Project"
 		tab4 = "Results"
 		
 		self.tabview.add(tab1)
@@ -213,7 +210,17 @@ class App(customtkinter.CTk):
 		ctt(self.download_button, delay=0.1, alpha=0.95, message="Download Results")
 		self.download_button.grid(row=0, column=10, padx=(5, 20), pady=header_padding_y)
 
+		self.refresh_step_view(0)
 		self.after(1000, self.running_loop)
+
+		# Read the file ./messages/welcome.txt and load it as a string and put it into the message
+
+		self.open_help()
+		
+	def open_help(self):
+		with open(os.path.join("./messages", "welcome.txt"), "r") as f:
+			message = f.read()
+			NW(title="Welcome!", message=message)
 
 	def update_graph(self, value):
 		self.vis_sidebar.refresh()
@@ -223,8 +230,15 @@ class App(customtkinter.CTk):
 		filename = asksaveasfilename(filetypes=[("JSON", "*.json")], initialfile="config", defaultextension="json", title="Save Project")
 		
 		try:
-		
+			self.option_manager.set_path(filename)
 			self.option_manager.save_project(filename)
+
+			folder = self.option_manager.get_project_folder()
+			if not os.path.exists(folder):
+				os.makedirs(folder)
+
+			if not os.path.exists(os.path.join(folder, "results")):
+				os.makedirs(os.path.join(folder, "results"))
 				
 			self.save_button.configure(text="Saved!")
 			self.after(3000, lambda: self.save_button.configure(text="Save"))
@@ -236,6 +250,22 @@ class App(customtkinter.CTk):
 	def refresh_step_view(self, value):
 		mode = self.option_manager.get_mode()
 		self.service_url.configure(textvariable=self.option_manager.get("url"))
+		self.graph_theme.configure(variable=self.option_manager.get("graph_theme"))
+
+		# Limit graph selection based on mode
+		self.graph_selector.configure(variable=self.option_manager.get("selected_graph"))
+		graph_types = []
+		if mode == "Optimization":
+			graph_types = ["Best Cost Stacked", "Best Cost by Round", "Custom CSV", "Compare CSV"]
+		elif mode == "Sensitivity Analysis":
+			graph_types = ["Custom CSV", "Compare CSV"]
+		elif mode == "Sampling: Halton" or mode == "Sampling: Random":
+			graph_types = ["Sampling CSV", "Matrix Editor"]
+		self.graph_selector.configure(values=graph_types)
+		selected_graph = self.option_manager.get("selected_graph").get()
+		if selected_graph not in graph_types:
+			self.option_manager.get("selected_graph").set(graph_types[0])
+		self.graph_selector.set(self.option_manager.get("selected_graph").get())
 
 		if mode == "Optimization":
 			self.test_button.configure(state="normal")
@@ -247,6 +277,9 @@ class App(customtkinter.CTk):
 			self.test_button.configure(fg_color="gray")
 			self.download_button.configure(state="disabled")
 			self.download_button.configure(fg_color="gray")
+
+		self.vis_sidebar.clear()
+		self.vis_sidebar.render()
 
 		self.steps_frame.clear()
 		self.steps_frame.render()
@@ -260,8 +293,11 @@ class App(customtkinter.CTk):
 		self.service_param_frame.clear()
 		self.service_param_frame.render()
 
-		#self.optimal_param_frame.clear()
-		#self.optimal_param_frame.render()
+		self.optimal_param_frame.clear()
+		self.optimal_param_frame.render()
+
+		self.project_name_label.configure(text=self.option_manager.get_project_data()["name"])
+		self.project_path_label.configure(text=self.option_manager.get_project_data()["path"])
 
 	def open_new_window(self):
 		# Shell out and run ./main.py
@@ -275,6 +311,14 @@ class App(customtkinter.CTk):
 		try:
 		
 			self.option_manager.load_project(filename)
+			self.option_manager.set_path(filename)
+
+			folder = self.option_manager.get_project_folder()
+			if not os.path.exists(folder):
+				os.makedirs(folder)
+
+			if not os.path.exists(os.path.join(folder, "results")):
+				os.makedirs(os.path.join(folder, "results"))
 			
 			self.refresh_step_view(0)
 			
@@ -343,19 +387,19 @@ class App(customtkinter.CTk):
 		self.run()	
 
 	def run(self):
-		pass
-		"""
-		metrics = self.option_manager.get_metrics()
-		self.running_config = metrics
 		
-		if self.testing:
-			steps = metrics['steps']
-			for step in steps:
-				for param in step['param']:
-					param['default_value'] = param['optimal_value']
-		self.testing = False
+		data = self.option_manager.get_all_data()
+		mode = self.option_manager.get_mode()
+		data = data[mode]
 
-		metrics["sensitivity_analysis_path"] = self.sensitivity_file.get()
+		self.running_config = data
+		
+		#if self.testing:
+		#	steps = metrics['steps']
+		#	for step in steps:
+		#		for param in step['param']:
+		#			param['default_value'] = param['optimal_value']
+		self.testing = False
 
 		self.progress_data = None
 		self.calibration_data = None
@@ -373,21 +417,11 @@ class App(customtkinter.CTk):
 		
 		self.textbox.insert("0.0", "Starting job...\n\n")
 		self.textbox.insert("0.0", "Job Parameters:\n")
-		self.textbox.insert("0.0", json.dumps(metrics, indent=4) + "\n\n")
+		self.textbox.insert("0.0", json.dumps(data, indent=4) + "\n\n")
 		try:
-			info = self.option_manager.get_project_data()
-			folder = os.path.join(info['path'], info['name'])
-
-			if not os.path.exists(folder):
-				os.makedirs(folder)
-
-			if (os.path.exists(os.path.join(folder, 'output.txt'))):
-				os.remove(os.path.join(folder, 'output.txt'))
-				
-			if (os.path.exists(os.path.join(folder, 'error.txt'))):
-				os.remove(os.path.join(folder, 'error.txt'))
+			folder = self.option_manager.get_project_folder()
 			
-			self.train_process = Process(target=PSORunner.run_process, args=(stdout_queue, stderr_queue, results_queue, metrics, folder))
+			self.train_process = Process(target=PSORunner.run_process, args=(stdout_queue, stderr_queue, results_queue, data, folder, mode))
 			self.train_process.daemon = True
 			self.train_process.start()
 			self.after(1000, self.watch_loop)
@@ -410,7 +444,7 @@ class App(customtkinter.CTk):
 			self.footer_progress_bar.configure(mode="determinate")
 			#self.progress_bar.set(0)
 			self.footer_progress_bar.set(0)
-	"""
+	
 			
 	def stop(self):
 		print("Stopping...")
