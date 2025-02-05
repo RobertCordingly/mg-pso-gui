@@ -105,7 +105,7 @@ class BoundsList(CTkFrame):
             tt2 = None
             tt3 = None
                         
-            tt = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['float', 'int', 'list', 'string', 'custom'], variable=bound["type"], command=self.refresh)
+            tt = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['float', 'list', 'custom'], variable=bound["type"], command=self.refresh)
             #command = lambda _, index=index, option=tt: (self.update_type(index, option)) 
             #tt.configure(command=command)
             #tt.set(bound["type"].get())
@@ -153,7 +153,7 @@ class BoundsList(CTkFrame):
                 self.validate_number(bounds_max.get(), cc, bounds_max)
                 tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
                 
-                if (bound_type == "list"):
+                if (bound_type == "list" and mode == "Optimization"):
                     def button_click_event(bound_index):
                         BEW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
 

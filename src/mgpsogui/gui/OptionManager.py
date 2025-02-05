@@ -16,7 +16,7 @@ class OptionManager():
         self.init_lists()
 
     def init_lists(self): 
-        self._project_data = {"name": "", "path": ""}
+        self._project_data = {"name": "cosu_default", "path": "/tmp"}
         self._data = {}
 
         self._mode_sv.set("Sampling: Halton")
@@ -369,7 +369,33 @@ class OptionManager():
         self._project_data["name"] = file_name
 
     def copy_list(self, source_mode):
+        name = "backup"
+        index = 0
+        while name + str(index) in self._data:
+            index += 1
+        self._data[name + str(index)] = self._data[self._mode_sv.get()]
+
         self._data[self._mode_sv.get()] = self._data[source_mode]
+
+    def combine_steps(self):
+        mode = self._mode_sv.get()
+
+        obj = {"parameter_objects": [], 
+            "override_parameter": [],
+            "objective_functions": [], 
+            "name": sv(), 
+            "open": True}
+        obj["name"].set("Combined Group")
+
+        for step in self._data[mode]["steps"]:
+            for param in step["parameter_objects"]:
+                obj["parameter_objects"].append(param)
+            for objective_function in step["objective_functions"]:
+                obj["objective_functions"].append(objective_function)
+            for override in step["override_parameter"]:
+                obj["override_parameter"].append(override)
+            
+        self._data[mode]["steps"] = [obj]
             
     def get_data(self):
         return self._data[self._mode_sv.get()]

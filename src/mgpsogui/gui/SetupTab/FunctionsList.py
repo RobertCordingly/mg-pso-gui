@@ -43,6 +43,8 @@ class FunctionsList(CTkFrame):
         self.containerFrame.grid(row=0, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
         self.containerFrame.grid_columnconfigure((0, 1), weight=1)
         
+        mode = self.option_manager.get_mode()
+
         row = 1
         
         funcs = self.option_manager.get_steps()[self.step_index]["objective_functions"]
@@ -52,34 +54,36 @@ class FunctionsList(CTkFrame):
             
             CTkLabel(self.containerFrame, text="Name:").grid(row=row, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
             CTkLabel(self.containerFrame, text="Objective:").grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="nsew")
-            CTkLabel(self.containerFrame, text="Weight:").grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="nsew")
+            if mode == "Optimization":
+                CTkLabel(self.containerFrame, text="Weight:").grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="nsew")
             
             row += 1
             
-            columns = ["absdiff",
-                       "absdifflog",
-                       "ave",
-                       "bias",
-                       "fhf",
-                       "ioa",
-                       "ioa2",
+            columns = ["absdiff (not supported)",
+                       "absdifflog  (not supported)",
+                       "ave  (not supported)",
+                       "bias  (not supported)",
+                       "fhf  (not supported)",
+                       "ioa  (not supported)",
+                       "ioa2  (not supported)",
                        "kge",
-                       "kge09",
-                       "mns",
-                       "mse",
+                       "kge09  (not supported)",
+                       "mns  (not supported)",
+                       "mse  (not supported)",
                        "ns",
-                       "ns2log",
+                       "ns2log  (not supported)",
                        "nslog1p",
-                       "nslog2",
+                       "nslog2  (not supported)",
                        "pbias",
-                       "pmcc",
+                       "pmcc  (not supported)",
                        "rmse",
                        "trmse",
                        "custom"]
             
             CTkEntry(self.containerFrame, textvariable=func["name"]).grid(row=row, column=0, padx=(5, 5), pady=(5, 5), sticky="ew")
             CTkOptionMenu(self.containerFrame, values=columns, variable=func["objective_function"], command=self.refresh).grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="ew")
-            CTkEntry(self.containerFrame, textvariable=func["weight"]).grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="ew")
+            if mode == "Optimization":
+                CTkEntry(self.containerFrame, textvariable=func["weight"]).grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="ew")
             
             row += 1
 
@@ -105,14 +109,15 @@ class FunctionsList(CTkFrame):
 
                 row += 1
             
-            CTkLabel(self.containerFrame, text="Observed and Simulated Data:").grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="nsew")
-            
-            row += 1
-            
-            CTkEntry(self.containerFrame, textvariable=func["data_observed"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="nsew")
-            row += 1
-            CTkEntry(self.containerFrame, textvariable=func["data_simulated"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="nsew")
-            row += 1
+            if mode != "Sensitivity Analysis":
+                CTkLabel(self.containerFrame, text="Observed and Simulated Data:").grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="nsew")
+                
+                row += 1
+                
+                CTkEntry(self.containerFrame, textvariable=func["data_observed"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="nsew")
+                row += 1
+                CTkEntry(self.containerFrame, textvariable=func["data_simulated"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="nsew")
+                row += 1
 
             if self.edit_mode:
                 remove_func = lambda index=index: (self.clear(), self.option_manager.remove_function(self.step_index, index), self.render())

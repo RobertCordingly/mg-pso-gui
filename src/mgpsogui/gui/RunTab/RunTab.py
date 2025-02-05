@@ -75,6 +75,10 @@ def create_tab(self, tab):
         self.option_manager.copy_list("Optimization")
         self.refresh_step_view(0)
 
+    def combine_steps():
+        self.option_manager.combine_steps()
+        self.refresh_step_view(0)
+
     def open_project_folder():
         # Open the file in the default program
         folder = self.option_manager.get_project_folder()
@@ -101,15 +105,18 @@ def create_tab(self, tab):
     self.optimization_copy = customtkinter.CTkButton(self.project_editor, text="From Optimization", command=copy_optim)
     self.optimization_copy.grid(row=4, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
 
-    customtkinter.CTkLabel(self.project_editor, text="Project Management:").grid(row=5, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+    self.combine_steps = customtkinter.CTkButton(self.project_editor, text="Combine Groups", command=combine_steps)
+    self.combine_steps.grid(row=5, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+
+    customtkinter.CTkLabel(self.project_editor, text="Project Management:").grid(row=6, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
 
     self.open_folder = customtkinter.CTkButton(self.project_editor, text="Open Project Folder", command=open_project_folder)
-    self.open_folder.grid(row=6, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+    self.open_folder.grid(row=7, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
 
-    customtkinter.CTkLabel(self.project_editor, text="Project Name:").grid(row=7, column=0, padx=(20, 20), pady=(10, 5), sticky="ew")
+    customtkinter.CTkLabel(self.project_editor, text="Project Name:").grid(row=8, column=0, padx=(20, 20), pady=(10, 5), sticky="ew")
     self.project_name_label = customtkinter.CTkLabel(self.project_editor, text=self.option_manager.get_project_data()["name"])
-    self.project_name_label.grid(row=8, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+    self.project_name_label.grid(row=9, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
 
-    customtkinter.CTkLabel(self.project_editor, text="Project Path:").grid(row=9, column=0, padx=(20, 20), pady=(10, 5), sticky="ew")
+    customtkinter.CTkLabel(self.project_editor, text="Project Path:").grid(row=10, column=0, padx=(20, 20), pady=(10, 5), sticky="ew")
     self.project_path_label = customtkinter.CTkLabel(self.project_editor, text=self.option_manager.get_project_data()["path"])
-    self.project_path_label.grid(row=10, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")
+    self.project_path_label.grid(row=11, column=0, padx=(20, 20), pady=(5, 10), sticky="ew")

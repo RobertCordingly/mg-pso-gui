@@ -415,7 +415,7 @@ class App(customtkinter.CTk):
 		#self.progress_message_middle.configure(text="Job starting...")
 		self.footer_progress_label.configure(text="Starting...")
 		
-		self.textbox.insert("0.0", "Starting job...\n\n")
+		self.textbox.insert("0.0", "Starting job of " + mode + "...\n\n")
 		self.textbox.insert("0.0", "Job Parameters:\n")
 		self.textbox.insert("0.0", json.dumps(data, indent=4) + "\n\n")
 		try:
@@ -490,6 +490,15 @@ class App(customtkinter.CTk):
 		if not os.path.exists(folder):
 			os.makedirs(folder)
 			
+		# Check if crash.txt exists in the folder
+		if (os.path.exists(os.path.join(folder, 'crash.txt'))):
+			with open(os.path.join(folder, 'crash.txt'), "r") as f:
+				message = f.read()
+				NW(title="Error Occurred!", message=message)
+			# Rename crash.txt to crash_read.txt
+			os.rename(os.path.join(folder, 'crash.txt'), os.path.join(folder, 'crash_read.txt'))
+			self.stop()
+
 		while True:
 			try:
 				stdout_line = stdout_queue.get_nowait()
