@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '0.2.101'
+VERSION = '0.2.102'
 DESCRIPTION = 'GUI for MG-PSO'
 LONG_DESCRIPTION = open('../README.md').read()
 
@@ -28,7 +28,7 @@ setup(
                       'plotly',
                       'csip',
                       'csip-cosu',
-                      'kaleido',
+                      'kaleido==0.1.0.post1',
                       'pillow'],
     keywords=['python', 'muti-group', 'pso', 'particle', 'swarm', 'optimization', 'gui'],
     classifiers=[

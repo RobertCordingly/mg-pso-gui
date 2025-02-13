@@ -44,18 +44,6 @@ def run_process(stdout_queue, stderr_queue, results_queue, data, folder, mode):
         mode (_type_): _description_
     """
     try:
-        # Setup folders
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-        if not os.path.exists(os.path.join(folder, "results")):
-            os.makedirs(os.path.join(folder, "results"))
-
-        if (os.path.exists(os.path.join(folder, 'output.txt'))):
-            os.remove(os.path.join(folder, 'output.txt'))
-            
-        if (os.path.exists(os.path.join(folder, 'error.txt'))):
-            os.remove(os.path.join(folder, 'error.txt'))
 
         # Redirect stdout and stderr to files
         old_stdout = sys.stdout

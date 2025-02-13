@@ -420,6 +420,20 @@ class App(customtkinter.CTk):
 		self.textbox.insert("0.0", json.dumps(data, indent=4) + "\n\n")
 		try:
 			folder = self.option_manager.get_project_folder()
+
+			# Setup folders
+			if not os.path.exists(folder):
+				os.makedirs(folder)
+
+			if not os.path.exists(os.path.join(folder, "results")):
+				os.makedirs(os.path.join(folder, "results"))
+
+			if (os.path.exists(os.path.join(folder, 'output.txt'))):
+				os.remove(os.path.join(folder, 'output.txt'))
+				
+			if (os.path.exists(os.path.join(folder, 'error.txt'))):
+				os.remove(os.path.join(folder, 'error.txt'))
+
 			
 			self.train_process = Process(target=PSORunner.run_process, args=(stdout_queue, stderr_queue, results_queue, data, folder, mode))
 			self.train_process.daemon = True
