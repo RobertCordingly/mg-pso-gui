@@ -313,6 +313,8 @@ class App(customtkinter.CTk):
 			self.option_manager.load_project(filename)
 			self.option_manager.set_path(filename)
 
+			self.algorithm_optionmenu.set(self.option_manager.get_mode())
+
 			folder = self.option_manager.get_project_folder()
 			if not os.path.exists(folder):
 				os.makedirs(folder)
@@ -611,7 +613,7 @@ class App(customtkinter.CTk):
 				self.footer_progress_bar.stop()
 				self.footer_progress_bar.configure(mode="determinate")
 				self.footer_progress_bar.set(data["percent"]/100)
-				self.footer_progress_label.configure(text="Round: " + str(data["round"]) + " - Step: " + str(data["step"]))
+				self.footer_progress_label.configure(text="Round: " + str(data["round"]) + " - Group: " + str(data["step"]))
 		else:
 			if (os.path.exists(os.path.join(folder, 'output.txt'))):
 				data = hp.parse_sampling_output(os.path.join(folder, 'output.txt'))
