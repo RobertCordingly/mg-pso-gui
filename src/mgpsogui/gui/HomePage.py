@@ -523,7 +523,7 @@ class App(customtkinter.CTk):
 				message = f.read()
 				NW(title="Error Occurred!", message=message)
 			# Rename crash.txt to crash_read.txt
-			os.rename(os.path.join(folder, 'crash.txt'), os.path.join(folder, 'crash_read.txt'))
+			os.replace(os.path.join(folder, 'crash.txt'), os.path.join(folder, 'crash_read.txt'))
 			self.stop()
 
 		while True:
