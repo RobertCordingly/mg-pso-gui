@@ -114,7 +114,7 @@ class App(customtkinter.CTk):
 		self.testing = False
 
 		# configure window
-		self.title("COSU Manager")
+		self.title("COSU Manager (v0.2.107)")
 		self.geometry(f"{1920}x{1080}")
 
 		# configure grid layout (4x4)
@@ -127,7 +127,7 @@ class App(customtkinter.CTk):
 		self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
 		self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 		self.sidebar_frame.grid_columnconfigure(4, weight=1)
-		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager", font=customtkinter.CTkFont(size=20, weight="bold"))
+		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager (v0.2.107)", font=customtkinter.CTkFont(size=20, weight="bold"))
 		self.logo_label.grid(row=0, column=0, padx=(20, 10), pady=header_padding_y)
 		self.save_button = customtkinter.CTkButton(self.sidebar_frame, text="Save", width=60, command=self.save_project)
 		self.save_button.grid(row=0, column=1, padx=header_padding_x, pady=header_padding_y)
@@ -305,25 +305,36 @@ class App(customtkinter.CTk):
 	
 	def load_project(self):
 		
+		print("Loading project...")
+
 		filename = askopenfilename(filetypes=[("JSON", "*.json")], title="Open Project", multiple=False)
 		print(filename)
+
+		print("loading project data...")
 		
 		try:
 		
 			self.option_manager.load_project(filename)
+
+			print("Setting path...")
 			self.option_manager.set_path(filename)
 
+			print("Setting mode...")
 			self.algorithm_optionmenu.set(self.option_manager.get_mode())
 
+			print("Initializing project folder...")
 			folder = self.option_manager.get_project_folder()
 			if not os.path.exists(folder):
 				os.makedirs(folder)
 
+			print("Initizializing results folder...")
 			if not os.path.exists(os.path.join(folder, "results")):
 				os.makedirs(os.path.join(folder, "results"))
 			
+			print("Refreshing GUI...")
 			self.refresh_step_view(0)
 			
+			print("Done!")
 			self.load_button.configure(text="Loaded!")
 			self.after(3000, lambda: self.load_button.configure(text="Load"))
 

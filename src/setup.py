@@ -1,12 +1,9 @@
 from setuptools import setup, find_packages
-import codecs
-import os
 
-VERSION = '0.2.104'
+VERSION = '0.2.110'
 DESCRIPTION = 'GUI for MG-PSO'
 LONG_DESCRIPTION = open('../README.md').read()
 
-# Setting up
 setup(
     name="mg-pso-gui",
     version=VERSION,
@@ -20,16 +17,19 @@ setup(
         'mgpsogui': ['*.json', '*.png', '*.txt', 'images/*.png', 'messages/*.txt', 'gui/defaults/*.json', 'gui/images/*.png', 'gui/messages/*.txt',  '*.yaml'],
     },
     include_package_data=True,
-    install_requires=['pandas', 
-                      'numpy', 
-                      'requests',
-                      'tk',
-                      'customtkinter',
-                      'plotly',
-                      'csip',
-                      'csip-cosu',
-                      'kaleido==0.1.0.post1',
-                      'pillow'],
+    install_requires=[
+        'pandas',
+        'numpy',
+        'requests',
+        'tk',
+        'customtkinter',
+        'plotly',
+        'csip',
+        'csip-cosu',
+        'pillow',
+        'kaleido==0.1.0.post1; sys_platform == "win32"',
+        'kaleido; sys_platform != "win32"',
+    ],
     keywords=['python', 'muti-group', 'pso', 'particle', 'swarm', 'optimization', 'gui'],
     classifiers=[
         "Development Status :: 1 - Planning",

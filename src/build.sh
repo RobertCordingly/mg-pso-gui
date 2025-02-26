@@ -14,16 +14,16 @@ echo "Build and upload completed."
 
 sleep 1
 
-python3.10 -m pip install mg-pso-gui --user --upgrade
+python3.10 -m pip install mg-pso-gui --user --upgrade --no-cache-dir
 
 echo "Installation completed."
 
 sleep 1
 
-python3.10 -m pip install mg-pso-gui --user --upgrade
+python3.10 -m pip install mg-pso-gui --user --upgrade --no-cache-dir
 
 sleep 1
 
-python3.10 -m pip install mg-pso-gui --user --upgrade
+python3.10 -m pip install mg-pso-gui --user --upgrade --no-cache-dir
 
 /users/robertcordingly/library/python/3.10/bin/mgpsogui

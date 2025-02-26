@@ -107,6 +107,8 @@ class OptionManager():
         return self.serialize_data(self._data)
 
     def load_project(self, filename):
+        
+        print("Initizializing lists...")
         self.init_lists()
 
         with open(filename, 'r') as file:
@@ -115,9 +117,12 @@ class OptionManager():
             for key, value in new_project_data.items():
                 self._project_data[key] = value
             self._mode_sv.set(results["mode"])
+
+            print("Deserializing data...")
             new_data = self.deserialize_data(results["data"])
 
             for service in self._service_modes:
+                print("Processing data for " + service + "...")
                 for key, value in new_data[service].items():
                     self._data[service][key] = value
 
@@ -357,7 +362,7 @@ class OptionManager():
         self._data[self._mode_sv.get()]["steps"][index]["open"] = not self._data[self._mode_sv.get()]["steps"][index]["open"]
 
     def remove_step(self, index):
-        self._data[self._mode_sv.get()][self._mode_sv.get()]["steps"].pop(index)
+        self._data[self._mode_sv.get()]["steps"].pop(index)
             
     def get_project_data(self):
         return self._project_data
