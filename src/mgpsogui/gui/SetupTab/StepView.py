@@ -126,9 +126,35 @@ class StepView(CTkScrollableFrame):
             self.output_method.grid(row=0, column=2, padx=(10, 10), pady=header_padding_y)
 
             row += 1
+        elif (self.mode == "Optimization" and len(self.steps) > 5):
+
+            header_padding_x = (5, 5)
+            header_padding_y = (10, 10)
+
+            self.file_selector_frame = CTkFrame(self.containerFrame)
+            self.file_selector_frame.grid(row=0, column=0, sticky="nsew", columnspan=2)
+            self.logo_label = CTkLabel(self.file_selector_frame, text="Select Group:")
+            self.logo_label.grid(row=0, column=0, padx=(10, 10), pady=header_padding_y)
+
+            step_names = []
+            for step in self.steps:
+                step_names.append(step['name'].get())
+            
+            selected_group = self.option_manager.get("optimization_selected_group").get()
+            if selected_group not in step_names:
+                self.option_manager.get("optimization_selected_group").set(step_names[0])
+
+            self.group_selector = CTkOptionMenu(self.file_selector_frame, values=step_names, width=50, variable=self.option_manager.get("optimization_selected_group"), command=self.refresh)
+            self.group_selector.grid(row=0, column=1, padx=(10, 10), pady=header_padding_y)
+
+            row += 1
 
 
         for step in self.steps:
+            if (self.mode == "Optimization" and len(self.steps) > 5):
+                if (step['name'].get() != self.option_manager.get("optimization_selected_group").get()):
+                    index += 1
+                    continue
 
             up_image = CTkImage(Image.open(os.path.join("./images", "up.png")), size=(20, 20))
             down_image = CTkImage(Image.open(os.path.join("./images", "down.png")), size=(20, 20))

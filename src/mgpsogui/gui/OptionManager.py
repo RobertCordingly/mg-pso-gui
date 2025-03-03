@@ -36,6 +36,7 @@ class OptionManager():
                     "sensitivity_negativeBestMetrics": [],
 
                     "sensitivity_analysis_path": sv(),
+                    "optimization_selected_group": sv(),
                     "sampling_output_mode": sv(),
                     "selected_graph": sv(),
                     "graph_theme": sv(),

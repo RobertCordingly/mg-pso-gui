@@ -114,7 +114,7 @@ class App(customtkinter.CTk):
 		self.testing = False
 
 		# configure window
-		self.title("COSU Manager (v0.2.107)")
+		self.title("COSU Manager (v0.2.112)")
 		self.geometry(f"{1920}x{1080}")
 
 		# configure grid layout (4x4)
@@ -127,7 +127,7 @@ class App(customtkinter.CTk):
 		self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
 		self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 		self.sidebar_frame.grid_columnconfigure(4, weight=1)
-		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager (v0.2.107)", font=customtkinter.CTkFont(size=20, weight="bold"))
+		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager (v0.2.112)", font=customtkinter.CTkFont(size=20, weight="bold"))
 		self.logo_label.grid(row=0, column=0, padx=(20, 10), pady=header_padding_y)
 		self.save_button = customtkinter.CTkButton(self.sidebar_frame, text="Save", width=60, command=self.save_project)
 		self.save_button.grid(row=0, column=1, padx=header_padding_x, pady=header_padding_y)
