@@ -25,7 +25,7 @@ import json
 import os
 from multiprocessing import Queue as MPQueue
 
-
+cost2 = {}
 
 def eval_cost(x, iteration, step_param, step_objfunc, calib_params, req_queue, files, url, param, conf: Dict, rnd,
               step):
@@ -289,19 +289,18 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
             
             print("Filled request queue...")
             
-            # if optimizer[s] is None:
-            # if r <= 1:
-            optimizer[s] = GlobalBestPSO(step.get('n_particles', n_particles),
-                                         len(param_names),
-                                         oh_strategy=step.get('oh_strategy', oh_strategy),
-                                         options=step.get('options', options),
-                                         bounds=bounds,
-                                         ftol=step.get('ftol', ftol),
-                                         ftol_iter=step.get('ftol_iter', ftol_iter),
-                                         cost_target=step.get('cost_target', cost_target),
-                                         init_pos=None)
-            print('\n>>>>> R{}/S{}  particle params: {}  calibrated params: {}\n'.format(r + 1, s + 1, param_names,
-                                                                                         args['calib_params']))
+            if optimizer[s] is None:
+                # if r <= 1:
+                optimizer[s] = GlobalBestPSO(step.get('n_particles', n_particles),
+                                            len(param_names),
+                                            oh_strategy=step.get('oh_strategy', oh_strategy),
+                                            options=step.get('options', options),
+                                            bounds=bounds,
+                                            ftol=step.get('ftol', ftol),
+                                            ftol_iter=step.get('ftol_iter', ftol_iter),
+                                            cost_target=step.get('cost_target', cost_target),
+                                            init_pos=None)
+            print('\n>>>>> R{}/S{}  particle params: {}  calibrated params: {}\n'.format(r + 1, s + 1, param_names, args['calib_params']))
 
             args['rnd'] = r + 1
             args['step'] = s + 1
