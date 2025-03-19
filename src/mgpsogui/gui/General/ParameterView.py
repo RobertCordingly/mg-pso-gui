@@ -57,7 +57,7 @@ class ParameterView(CTkScrollableFrame):
                 CTkEntry(self.containerFrame, textvariable=self.key_values[index]["name"]).grid(row=row, column=0, columnspan=3, padx=(5, 5), pady=(5, 5), sticky="ew")
             
             if self.edit_mode and not required:
-                type_menu = CTkOptionMenu(self.containerFrame, variable=self.key_values[index]["type"], values=["integer", "float", "date", "datetime", "boolean", "string"], width=20)
+                type_menu = CTkOptionMenu(self.containerFrame, variable=self.key_values[index]["type"], values=["integer", "float", "date", "boolean", "string"], width=20)
                 type_menu.grid(row=row, column=3, columnspan=1, padx=(0, 0), pady=(5, 5), sticky="ew")
 
                 dest_menu = CTkOptionMenu(self.containerFrame, variable=self.key_values[index]["destination"], values=["args", "kwargs", "conf", "options", "oh_strategy", "metainfo"], width=20)

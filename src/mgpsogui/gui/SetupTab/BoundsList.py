@@ -18,8 +18,8 @@ from tkinter.filedialog import askopenfilename
 
 class BoundsList(CTkFrame):
     def __init__(self, *args,
-                 option_manager: None,
-                 step_index: 0,
+                 option_manager = None,
+                 step_index = 0,
                  **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -54,6 +54,7 @@ class BoundsList(CTkFrame):
         self.tooltip_list = []
 
         mode = self.option_manager.get_mode()
+        bounds = self.option_manager.get_steps()[self.step_index]["parameter_objects"]
 
         # Load bound parameters depending on the mode
         self.optParams = []
@@ -90,15 +91,25 @@ class BoundsList(CTkFrame):
         CTkLabel(self.containerFrame, text="Type:").grid(row=row, column=0, padx=(5, 5), pady=(5, 5), sticky="nsew")
         CTkLabel(self.containerFrame, text="Name:").grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
+
+        show_strategy = False
+
         if mode != "Sensitivity Analysis":
             CTkLabel(self.containerFrame, text="Bounds:").grid(row=row, column=2, columnspan=2, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
             if mode == "Optimization":
+                
+                for bound in bounds:
+                    bound_type = bound["type"].get()
+                    if bound_type == "list":
+                        show_strategy = True
+                        break
+
                 CTkLabel(self.containerFrame, text="Default:").grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="nsew")
-                CTkLabel(self.containerFrame, text="Strategy:").grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="nsew")
+
+                if show_strategy:
+                    CTkLabel(self.containerFrame, text="Strategy:").grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="nsew")
         row += 1
-        
-        bounds = self.option_manager.get_steps()[self.step_index]["parameter_objects"]
         
         for bound in bounds:
             tt1 = None
@@ -153,15 +164,6 @@ class BoundsList(CTkFrame):
                 self.validate_number(bounds_max.get(), cc, bounds_max)
                 tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
                 
-                if (bound_type == "list" and mode == "Optimization"):
-                    def button_click_event(bound_index):
-                        BEW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
-
-                    open_window = lambda event=None, bound_index=index: (button_click_event(bound_index))
-                    expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
-                    button = CTkButton(self.containerFrame, width=30, text=None, image=expand_image, command=open_window)
-                    button.grid(row=row, column=6, padx=(5, 5), pady=(5, 5), sticky="new")
-                
                 if mode == "Sampling: Random" or mode == "Sampling: Halton":
                     
                     tt1 = ctt(bounds_min, delay=0.1, alpha=0.95, message="...")
@@ -181,8 +183,17 @@ class BoundsList(CTkFrame):
                 default_value.grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="new")
                 default_value.configure(textvariable=bound["default_value"])
 
-                calibration_strat = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['none', 'mean', 'single'], variable=bound["calibration_strategy"])
-                calibration_strat.grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="new")
+                if (bound_type == "list" and mode == "Optimization"):
+                    calibration_strat = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['none', 'mean', 'single'], variable=bound["calibration_strategy"])
+                    calibration_strat.grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="new")
+
+                    def button_click_event(bound_index):
+                        BEW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
+
+                    open_window = lambda event=None, bound_index=index: (button_click_event(bound_index))
+                    expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
+                    button = CTkButton(self.containerFrame, width=30, text=None, image=expand_image, command=open_window)
+                    button.grid(row=row, column=6, padx=(5, 5), pady=(5, 5), sticky="new")
                 
                 tt1 = ctt(bounds_min, delay=0.1, alpha=0.95, message="...")
                 tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")

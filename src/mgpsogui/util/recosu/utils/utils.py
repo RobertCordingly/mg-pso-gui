@@ -18,12 +18,17 @@ from csip import Client
 
 NORM = {
     'kge': lambda x: 1 - x,
+    'absdiff': lambda x: x,
+    'kge09': lambda x: 1 - x,
     'nslog': lambda x: 1 - x,
     'nslog1p': lambda x: 1 - x,
+    'nslog2': lambda x: 1 - x,  # the good one???
     'ns': lambda x: 1 - x,
+    'mns': lambda x: 1 - x,
     'rmse': lambda x: x,
     'trmse': lambda x: x,
-    'pbias': lambda x: abs(x)
+    'pbias': lambda x: abs(x)  # correct one
+    # 'pbias': lambda x: abs(2.5 - x)
 }
 
 

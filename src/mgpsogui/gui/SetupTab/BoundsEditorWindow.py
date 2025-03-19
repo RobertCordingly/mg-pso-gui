@@ -19,7 +19,21 @@ class BoundsEditorWindow(CTkInputDialog):
                  **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.geometry("400x800")
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        win_width = 400
+        win_height = 800
+        if screen_width < win_width:
+            win_width = screen_width * 0.9
+
+        if screen_height < win_height:
+            win_height = screen_height * 0.9
+
+        # Calculate the x and y coordinates to center the window
+        x_coord = (screen_width // 2) - (win_width // 2)
+        y_coord = (screen_height // 2) - (win_height // 2)
+
+        self.geometry(f"{win_width}x{win_height}+{x_coord}+{y_coord}")
         
         self.step_index = step_index
         self.bound_index = bound_index  

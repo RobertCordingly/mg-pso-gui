@@ -113,9 +113,23 @@ class App(customtkinter.CTk):
 		self.calibration_data = None
 		self.testing = False
 
-		# configure window
-		self.title("COSU Manager (v0.2.112)")
-		self.geometry(f"{1920}x{1080}")
+		# Configure window
+		version = "v0.2.120"
+		self.title("COSU Manager (" + version + ")")
+
+		screen_width = self.winfo_screenwidth()
+		screen_height = self.winfo_screenheight()
+		win_width = 1920
+		win_height = 1080
+		if screen_width < win_width or screen_height < win_height:
+			win_width = screen_width * 0.9
+			win_height = screen_height * 0.9
+
+		# Calculate the x and y coordinates to center the window
+		x_coord = (screen_width // 2) - (win_width // 2)
+		y_coord = (screen_height // 2) - (win_height // 2)
+
+		self.geometry(f"{win_width}x{win_height}+{x_coord}+{y_coord}")
 
 		# configure grid layout (4x4)
 		self.grid_columnconfigure(0, weight=1)
@@ -127,7 +141,7 @@ class App(customtkinter.CTk):
 		self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
 		self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 		self.sidebar_frame.grid_columnconfigure(4, weight=1)
-		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager (v0.2.112)", font=customtkinter.CTkFont(size=20, weight="bold"))
+		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager (" + version + ")", font=customtkinter.CTkFont(size=20, weight="bold"))
 		self.logo_label.grid(row=0, column=0, padx=(20, 10), pady=header_padding_y)
 		self.save_button = customtkinter.CTkButton(self.sidebar_frame, text="Save", width=60, command=self.save_project)
 		self.save_button.grid(row=0, column=1, padx=header_padding_x, pady=header_padding_y)
@@ -401,9 +415,17 @@ class App(customtkinter.CTk):
 
 	def run(self):
 		
+		if self.train_process is not None and self.train_process.is_alive():
+			NW(title="Error", message="A process is already running!", x = 400, y = 200)
+			return 0
+		
 		data = self.option_manager.get_all_data()
 		mode = self.option_manager.get_mode()
 		data = data[mode]
+
+		if data["url"] == "":
+			NW(title="Error", message="Service URL is not set!", x = 400, y = 200)
+			return 0
 
 		self.running_config = data
 		

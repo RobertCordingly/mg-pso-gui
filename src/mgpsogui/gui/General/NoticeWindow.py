@@ -12,14 +12,32 @@ class NoticeWindow(CTkInputDialog):
     For detailed information check out the documentation.
     """
 
-    def __init__(self, *args,
-                 message: None,
+    def __init__(self,
+                 message = None,
+                 x = 800,
+                 y = 800,
+                 *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.geometry("800x800")
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        win_width = x
+        win_height = y
+        if screen_width < win_width:
+            win_width = screen_width * 0.9
+
+        if screen_height < win_height:
+            win_height = screen_height * 0.9
+
+        # Calculate the x and y coordinates to center the window
+        x_coord = (screen_width // 2) - (win_width // 2)
+        y_coord = (screen_height // 2) - (win_height // 2)
+
+        self.geometry(f"{win_width}x{win_height}+{x_coord}+{y_coord}")
 
         self.message = message
+
 
     def _create_widgets(self):
 
