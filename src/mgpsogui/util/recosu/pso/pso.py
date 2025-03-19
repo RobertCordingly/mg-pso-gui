@@ -95,7 +95,7 @@ def eval_cost(x, iteration, step_param, step_objfunc, calib_params, req_queue, f
 
     for key in cost2:
         # print(key, ' - ', cost2[key])
-        cost2[key][iteration][1] = cost[key]
+        cost2[key][iteration][1] = cost[key] # BUG LIST INDEX OUT OF RANGE?
         # print(key, ' - ', cost2[key])
 
     print(flush=True)

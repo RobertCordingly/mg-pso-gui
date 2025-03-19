@@ -116,7 +116,11 @@ class BoundsList(CTkFrame):
             tt2 = None
             tt3 = None
                         
-            tt = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['float', 'list', 'custom'], variable=bound["type"], command=self.refresh)
+            options_list = ['custom', 'float', 'list']
+            if self.optParams == [] or self.optParams is None:
+                options_list = ['custom', 'list']
+            
+            tt = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=options_list, variable=bound["type"], command=self.refresh)
             #command = lambda _, index=index, option=tt: (self.update_type(index, option)) 
             #tt.configure(command=command)
             #tt.set(bound["type"].get())
@@ -125,6 +129,10 @@ class BoundsList(CTkFrame):
             cc = None
             
             bound_type = bound["type"].get()
+
+            if self.optParams == [] and bound_type == "float":
+                bound["type"].set("custom")
+                bound_type = "custom"
             
             if bound_type == "float":
                 cc = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=self.optParams, variable=bound["name"])

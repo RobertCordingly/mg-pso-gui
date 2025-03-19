@@ -59,7 +59,7 @@ class FunctionsList(CTkFrame):
             
             row += 1
             
-            columns = ["absdiff (not supported)",
+            columns = ["absdiff",
                        "absdifflog  (not supported)",
                        "ave  (not supported)",
                        "bias  (not supported)",
@@ -67,13 +67,14 @@ class FunctionsList(CTkFrame):
                        "ioa  (not supported)",
                        "ioa2  (not supported)",
                        "kge",
-                       "kge09  (not supported)",
-                       "mns  (not supported)",
+                       "kge09",
+                       "mns",
                        "mse  (not supported)",
+                       "rmse",
                        "ns",
                        "ns2log  (not supported)",
                        "nslog1p",
-                       "nslog2  (not supported)",
+                       "nslog2",
                        "pbias",
                        "pmcc  (not supported)",
                        "rmse",
