@@ -138,7 +138,7 @@ class ListParametersView(CTkScrollableFrame):
         row += 1
         
         CTkButton(self.containerFrame, text="Open", command=self.open_csv).grid(row=row, column=0, padx=(5, 5), pady=(5, 5), sticky="ew")
-        CTkButton(self.containerFrame, text="Import", command=self.import_csv).grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="ew")
+        CTkButton(self.containerFrame, text="Paste", command=self.import_csv).grid(row=row, column=1, padx=(5, 5), pady=(5, 5), sticky="ew")
         row += 1
         
         

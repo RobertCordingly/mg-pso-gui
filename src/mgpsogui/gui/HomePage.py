@@ -113,6 +113,8 @@ class App(customtkinter.CTk):
 		self.calibration_data = None
 		self.testing = False
 
+		self.running_loop_ticks = 1
+
 		# Configure window
 		version = "v0.2.120"
 		self.title("COSU Manager (" + version + ")")
@@ -143,7 +145,7 @@ class App(customtkinter.CTk):
 		self.sidebar_frame.grid_columnconfigure(4, weight=1)
 		self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="COSU Manager (" + version + ")", font=customtkinter.CTkFont(size=20, weight="bold"))
 		self.logo_label.grid(row=0, column=0, padx=(20, 10), pady=header_padding_y)
-		self.save_button = customtkinter.CTkButton(self.sidebar_frame, text="Save", width=60, command=self.save_project)
+		self.save_button = customtkinter.CTkButton(self.sidebar_frame, text="Save As", width=60, command=self.save_project)
 		self.save_button.grid(row=0, column=1, padx=header_padding_x, pady=header_padding_y)
 		self.load_button = customtkinter.CTkButton(self.sidebar_frame, text="Load", width=60, command=self.load_project)
 		self.load_button.grid(row=0, column=2, padx=header_padding_x, pady=header_padding_y)
@@ -241,7 +243,8 @@ class App(customtkinter.CTk):
 		GraphGenerator.generate_graphs(self)
 			
 	def save_project(self):
-		filename = asksaveasfilename(filetypes=[("JSON", "*.json")], initialfile="config", defaultextension="json", title="Save Project")
+		name = self.option_manager.get_project_data()['name']
+		filename = asksaveasfilename(filetypes=[("JSON", "*.json")], initialfile=name, defaultextension="json", title="Save Project")
 		
 		try:
 			self.option_manager.set_path(filename)
@@ -255,11 +258,32 @@ class App(customtkinter.CTk):
 				os.makedirs(os.path.join(folder, "results"))
 				
 			self.save_button.configure(text="Saved!")
-			self.after(3000, lambda: self.save_button.configure(text="Save"))
+			self.after(3000, lambda: self.save_button.configure(text="Save As"))
 		except Exception as e:
 			self.save_button.configure(text="Error!")
 			print(e)
-			self.after(3000, lambda: self.save_button.configure(text="Save"))
+			self.after(3000, lambda: self.save_button.configure(text="Save As"))
+
+	def auto_save_project(self):
+		data = self.option_manager.get_project_data()
+
+		if (data['path'] != "/tmp"):
+			filename = os.path.join(data['path'], data['name'] + ".json")
+			
+			try:
+				self.option_manager.set_path(filename)
+				self.option_manager.save_project(filename)
+
+				folder = self.option_manager.get_project_folder()
+				if not os.path.exists(folder):
+					os.makedirs(folder)
+
+				if not os.path.exists(os.path.join(folder, "results")):
+					os.makedirs(os.path.join(folder, "results"))
+					
+			except Exception as e:
+				self.save_button.configure(text="Error!")
+				print(e)
 	
 	def refresh_step_view(self, value):
 		mode = self.option_manager.get_mode()
@@ -528,8 +552,11 @@ class App(customtkinter.CTk):
 			active_tab = self.tabview.get()
 			if (active_tab == "Results"):
 				GraphGenerator.generate_graphs(self)
+			if (self.running_loop_ticks % 10 == 0):
+				self.auto_save_project()
 		finally:
 			self.after(1000, self.running_loop)
+			self.running_loop_ticks += 1
 
 	def watch_loop(self):
 		print("Watch loop running...")
