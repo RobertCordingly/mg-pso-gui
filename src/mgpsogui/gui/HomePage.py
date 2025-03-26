@@ -443,6 +443,8 @@ class App(customtkinter.CTk):
 			NW(title="Error", message="A process is already running!", x = 400, y = 200)
 			return 0
 		
+		self.auto_save_project()
+
 		data = self.option_manager.get_all_data()
 		mode = self.option_manager.get_mode()
 		data = data[mode]
