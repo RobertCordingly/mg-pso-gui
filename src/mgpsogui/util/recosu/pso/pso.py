@@ -9,6 +9,7 @@
 # OMSLab licenses this file to you under the MIT license.
 # See the LICENSE file in the project root for more information.
 #
+import numpy
 
 from ..utils import utils
 from .csip_access import csip_worker
@@ -24,8 +25,10 @@ import json
 import os
 from multiprocessing import Queue as MPQueue
 
+cost_global = {}
 
-def eval_cost(x, iteration, step_param_names, step_objfunc, calib_params, req_queue, files, url, param, conf: Dict, rnd,
+
+def eval_cost(x, iteration, step_param, step_objfunc, calib_params, req_queue, files, url, param, conf: Dict, rnd,
               step):
     particles = len(x[:, 0])
 
@@ -41,7 +44,7 @@ def eval_cost(x, iteration, step_param_names, step_objfunc, calib_params, req_qu
         # submit for processing
         # for i_particle, v in enumerate(x[:, 0]):
         for particle in range(particles):
-            req_queue.put((rnd, step, iteration, particle, x, step_param_names, calib_params, step_objfunc, res_queue))
+            req_queue.put((rnd, step, iteration, particle, x, step_param, calib_params, step_objfunc, res_queue))
             # req_queue.put((i_particle, x[i_particle,:], step_param_names, calib_params, step_objfunc, res_queue))
 
         # wait for the cost value to come back
@@ -49,6 +52,9 @@ def eval_cost(x, iteration, step_param_names, step_objfunc, calib_params, req_qu
         for idx in range(particles):
             (particle, p_cost) = res_queue.get()
             cost[particle] = p_cost
+            full_id = 'r{}s{}i{}p{}'.format(rnd, step, iteration, particle)
+            cost_global[full_id] = p_cost
+
             res_queue.task_done()
 
         res_queue.join()
@@ -63,7 +69,6 @@ def eval_cost(x, iteration, step_param_names, step_objfunc, calib_params, req_qu
         # leave the loop if fails acceptable
         if failed_particles <= pfail_count:
             break
-        
         print("Re-running particles, since ", failed_particles, ' out of ', particles, ' particles failed.')
         pfail_retry -= 1
 
@@ -76,8 +81,13 @@ def eval_cost(x, iteration, step_param_names, step_objfunc, calib_params, req_qu
     mean = np.nanmean(cost)
     cost[nan_idx[0]] = mean
 
+    for particle in nan_idx[0]:
+        full_id = 'r{}s{}i{}p{}'.format(rnd, step, iteration, particle)
+        cost_global[full_id] = mean
+
     print(flush=True)
     return cost
+
 
 def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters: int, options: Dict,
                 oh_strategy: Dict = None, n_threads: int = 4, rtol: float = 0.001, ftol: float = -np.inf,
@@ -184,13 +194,12 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
     step_trace['n_particles'] = n_particles
     step_trace['n_steps'] = len(steps)
     step_trace['steps'] = copy.deepcopy(steps)
-    step_trace['args'] = str(args) #BUG MUST BE REMOVED
 
-    if step_file is not None:
-        with open(step_file, "w") as fo:
-            json.dump(step_trace, fo)
+    #step_trace['args'] = str(args) BUG MUST BE REMOVED?
+    step_trace['args'] = args
 
-    print("Wrote step trace")
+    serialize_step_trace(step_file, step_trace)
+
 
     # best round cost
     best_round_cost = np.inf
@@ -198,7 +207,6 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
     # request queue for worker
     req_queue = queue.Queue()
     
-    print("Created queue")
 
     conf = conf or {}
     done = False
@@ -211,13 +219,13 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
         thread_pool.append(worker)
         worker.start()
 
-    print("Started worker threads")
 
     r_below = 0
     early_exit = False
     start_time = datetime.datetime.now()
     for r in range(max_rounds):
         no_improvement = np.full(len(steps), True)
+        best_step_request = None
         for s, step in enumerate(steps):
 
             # check if forced exit.
@@ -228,7 +236,8 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
 
             param_names, bounds, objfunc = utils.get_step_info(steps, s)
             # maybe clone args?
-            args['step_param_names'] = param_names
+            # args['step_param_names'] = param_names
+            args['step_param'] = step['param']
             args['step_objfunc'] = objfunc
             # get calibrated parameter from all other steps
             args['calib_params'] = utils.get_calibrated_params(steps, s)
@@ -237,25 +246,30 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
             args['conf'] = conf
 
             print("Calling global best..")
+            # if r < 1:
+            # best_pos[s] = np.full(len(param_names), True)
+            # best_pos[s] = np.empty(len(param_names), dtype=object)
+            # best_pos[s] = None
 
             # create optimizer in the first round.
-            if optimizer[s] is None:
-                optimizer[s] = GlobalBestPSO(step.get('n_particles', n_particles),
-                                             len(param_names),
-                                             oh_strategy=step.get('oh_strategy', oh_strategy),
-                                             options=step.get('options', options),
-                                             bounds=bounds,
-                                             ftol=step.get('ftol', ftol),
-                                             ftol_iter=step.get('ftol_iter', ftol_iter),
-                                             cost_target=step.get('cost_target', cost_target))
-                
-            print('\n>>>>> R{}/S{}  particle params: {}  calibrated params: {}\n'.format(r + 1, s + 1, param_names, args['calib_params']))
-
             #if result_queue is not None:
             #    result_queue.put('\n>>>>> R{}/S{}  particle params: {}  calibrated params: {}\n'.format(r + 1, s + 1, param_names, args['calib_params']))
             
             print("Filled request queue...")
             
+            if optimizer[s] is None:
+                # if r <= 1:
+                optimizer[s] = GlobalBestPSO(step.get('n_particles', n_particles),
+                                            len(param_names),
+                                            oh_strategy=step.get('oh_strategy', oh_strategy),
+                                            options=step.get('options', options),
+                                            bounds=bounds,
+                                            ftol=step.get('ftol', ftol),
+                                            ftol_iter=step.get('ftol_iter', ftol_iter),
+                                            cost_target=step.get('cost_target', cost_target),
+                                            init_pos=None)
+            print('\n>>>>> R{}/S{}  particle params: {}  calibrated params: {}\n'.format(r + 1, s + 1, param_names, args['calib_params']))
+
             args['rnd'] = r + 1
             args['step'] = s + 1
 
@@ -263,18 +277,20 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
 
             # perform optimization
             cost, pos = optimizer[s].optimize(eval_cost, iters=step.get('iters', iters), **args)
+
+            for key, c in cost_global.items():
+                if c == cost:
+                    print(' best-file {}.json'.format(key))
+            cost_global.clear()
+
+            print(' cost: ', cost, ' pos: ', pos)
             if cost is None:
                 early_exit = True
                 break
 
             print("Finished evaluation...")
-
-            # capture the best cost
-            # if cost < best_cost[s] and np.abs(cost - best_cost[s]) > rtol:
-            if cost < best_cost[s]:
-                best_cost[s] = cost
-                no_improvement[s] = False
-                utils.annotate_step(best_cost[s], pos, steps, s)
+            if cost == best_cost[s]:
+                print(' !! equal cost !!!')
 
             print('\n     Step summary, best particle values: {} '.format(pos))
             
@@ -284,21 +300,21 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
             key = "r{}s{}".format(r + 1, s + 1)
             step_trace[key] = {}
             step_trace[key]['time'] = str(datetime.datetime.now())
-            
-            best_costs_list = best_cost.tolist()
-            # If the cost is inf, set it to a string
-            for i, c in enumerate(best_costs_list):
-                if c == np.inf:
-                    best_costs_list[i] = 'inf'
-                elif c == -np.inf:
-                    best_costs_list[i] = '-inf'
-            
-            step_trace[key]['best_costs'] = best_costs_list # BUG
+
+            #step_trace[key]['best_costs'] = best_costs_list BUG
+            step_trace[key]['best_costs'] = best_cost
             step_trace[key]['steps'] = copy.deepcopy(steps)
 
-            if step_file is not None:
-                with open(step_file, "w") as fo:
-                    json.dump(step_trace, fo)
+            # capture the best cost
+            # if cost < best_cost[s] and np.abs(cost - best_cost[s]) > rtol:
+            if cost < best_cost[s]:
+                best_cost[s] = cost
+                no_improvement[s] = False
+                utils.annotate_step(best_cost[s], pos, steps, s)
+                best_step_request = key
+                # best_pos[s] = pos
+
+            serialize_step_trace(step_file, step_trace)
 
             # print(json.dumps(steps, sort_keys=False, indent=2))
 
@@ -325,25 +341,15 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
         if result_queue is not None:
             result_queue.put('\n  Progress -  best_round_cost:{}, rel_round_tol:{}, rtol:{}'
               .format(best_round_cost, rel_round_tol, rtol))
+        print('\n  Progress -  best_step_request:{}'.format(best_step_request))
 
         key = "r{}".format(r + 1)
         step_trace[key] = {}
         step_trace[key]['time'] = str(datetime.datetime.now())
         step_trace[key]['round_cost'] = round_cost
-        
-        best_costs_list = best_cost.tolist() #BUG
-        # If the cost is inf, set it to a string
-        for i, c in enumerate(best_costs_list):
-            if c == np.inf:
-                best_costs_list[i] = 'inf'
-            elif c == -np.inf:
-                best_costs_list[i] = '-inf'
-        
-        step_trace[key]['best_costs'] = best_costs_list
-        step_trace[key]['improvements'] = no_improvement.tolist()
-        if step_file is not None:
-            with open(step_file, "w") as fo:
-                json.dump(step_trace, fo)
+        step_trace[key]['best_costs'] = best_cost
+        step_trace[key]['improvements'] = no_improvement
+        serialize_step_trace(step_file, step_trace)
 
         if (r + 1 >= min_rounds) and 0 <= rel_round_tol < rtol:
             r_below += 1
@@ -372,12 +378,24 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
     step_trace['end'] = str(datetime.datetime.now())
     step_trace['time'] = elapsed
 
-    if step_file is not None:
-        with open(step_file, "w") as fo:
-            json.dump(step_trace, fo)
+    serialize_step_trace(step_file, step_trace)
 
     if result_queue is not None:
         result_queue.put("Step Trace")
         result_queue.put(step_trace)
 
     return optimizer, step_trace
+
+
+class StepTraceEncoder(json.JSONEncoder):
+    """ <cropped for brevity> """
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return f"<<non-serializable: {type(obj).__qualname__}>>"
+
+
+def serialize_step_trace(step_file, step_trace):
+    if step_file is not None:
+        with open(step_file, "w") as fo:
+            json.dump(step_trace, fo, cls=StepTraceEncoder)

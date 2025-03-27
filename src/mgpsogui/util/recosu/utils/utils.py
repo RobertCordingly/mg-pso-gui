@@ -41,17 +41,14 @@ def calc_cost(response: "Client", objfunc) -> float:
 
     cost = 0.0
     for o in objfunc:
-        cosu_val = response.get_cosu_value(o['name'])
+        cosu_val = float(response.get_cosu_value(o['name']))
         if cosu_val is None:
             raise Exception('No cosu of value for ' + o['name'])
         cosu_of = o['of']
-        n = NORM.get(cosu_of, lambda x: x) # default
-        cost += n(cosu_val) * o.get('weight', 1.0)
-
-        # of_val = response.get_data_value(of['name'])
-        # for name in NORM:
-        #     if str(c['name']).startswith(name):
-        #         cost += NORM[name](cosu_val) * c.get('weight', 1.0)
+        n = NORM.get(cosu_of, lambda x: x)  # default
+        cost += n(cosu_val) * float(o.get('weight', 1.0))  # original
+        if cost < 0:
+            print(o['name'], ' ', cosu_of, ' ', cosu_val)
     return cost
 
 def save(file, dict):
@@ -72,24 +69,51 @@ def get_step_info(steps, index):
 
     step = steps[index]
     l = len(step['param'])
-    param_min = np.ones(l)
-    param_max = np.ones(l)
+    param_min = []
+    param_max = []
     param_names = []
 
     # extract names and bounds
     for i, p in enumerate(step['param']):
-        param_names.append(p['name'])
-        if len(p['bounds']) != 2:
-            raise Exception('Invalid bounds tuple: (min, max): "{}"'.format(p['bounds']))
-        if not p['bounds'][0] < p['bounds'][1]:
-            raise Exception('Invalid bounds values: "{}"'.format(p['bounds']))
-        param_min[i] = p['bounds'][0]
-        param_max[i] = p['bounds'][1]
+        value_type = p.get('type', 'float')
+        if 'float' == value_type:
+            param_names.append(p['name'])
+            if len(p['bounds']) != 2:
+                raise Exception('Invalid bounds tuple: (min, max): "{}"'.format(p['bounds']))
+            if not p['bounds'][0] < p['bounds'][1]:
+                raise Exception('Invalid bounds values: "{}"'.format(p['bounds']))
+            param_min.append(p['bounds'][0])
+            param_max.append(p['bounds'][1])
+        elif 'list' == value_type:
+            if 'default_value' not in p:
+                raise Exception('List value types require a default value')
+            if type([]) != type(p['default_value']):
+                raise Exception('Default value must be a list')
+
+            base_name = p['name']
+            calibration_strategy = p.get('calibration_strategy', 'mean')
+            if 'mean' == calibration_strategy:
+                param_names.append(base_name)
+                if len(p['bounds']) != 2:
+                    raise Exception('Invalid bounds tuple: (min, max): "{}"'.format(p['bounds']))
+                if not p['bounds'][0] < p['bounds'][1]:
+                    raise Exception('Invalid bounds values: "{}"'.format(p['bounds']))
+                param_min.append(p['bounds'][0])
+                param_max.append(p['bounds'][1])
+            elif 'single' == calibration_strategy:
+                if len(p['bounds']) != 2:
+                    raise Exception('Invalid bounds tuple: (min, max): "{}"'.format(p['bounds']))
+                if not p['bounds'][0] < p['bounds'][1]:
+                    raise Exception('Invalid bounds values: "{}"'.format(p['bounds']))
+                for index, value in enumerate(p['default_value']):
+                    param_names.append("{}_{}".format(base_name, index))
+                    param_min.append(p['bounds'][0])
+                    param_max.append(p['bounds'][1])
+        else:
+            raise Exception('Invalid value type: {}'.format(value_type))
 
         # check if OF is supported
     for o in step['objfunc']:
-        #  if not o['name'] in NORM:
-        #    raise Exception('OF not supported: "{}"'.format(o['name']))
         found = False
         for name in NORM:
             if str(o['name']).startswith(name):
@@ -115,6 +139,8 @@ def get_calibrated_params(steps, index):
             # if 'value' in p.keys():
             if 'value' in p:
                 cp[p['name']] = p['value']
+            elif 'default_value' in p:
+                cp[p['name']] = p['default_value']
 
     # if the step parameter are in any other step, take them out since
     # we rather want to calibrate them
@@ -130,8 +156,27 @@ def annotate_step(best_cost, pos, steps, index):
 
     step = steps[index]
     step['cost'] = best_cost
+    value_index = 0
     for i, p in enumerate(step['param']):
-        p['value'] = pos[i]
+        value_type = p.get('type', 'float')
+        if 'float' == value_type:
+            p['value'] = pos[value_index]
+            value_index += 1
+        elif 'list' == value_type:
+            calibration_strategy = p.get('calibration_strategy', 'mean')
+            if 'mean' == calibration_strategy:
+                mean_value = pos[value_index]
+                p['mean_value'] = mean_value
+                p['value'] = [element + mean_value * element for element in p['default_value']]
+                value_index += 1
+            elif 'single' == calibration_strategy:
+                val = []
+                j = 0
+                while j < len(p['default_value']):
+                    val.append(pos[value_index])
+                    value_index += 1
+                    j += 1
+                p['value'] = val
 
 
 def check_url(url):
