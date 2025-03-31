@@ -67,7 +67,7 @@ def run_sampler(steps: list[dict[str, any]], args: dict[str, any], count: int, n
                 params[param_names[index]] = weighted_value(sample[index], bounds[0][index], bounds[1][index])
                 index += 1
 
-            task: SamplerTask = SamplerTask(sample_id, params, objfunc, static_parameters, url, files, metainfo, conf)
+            task: SamplerTask = SamplerTask(sample_id, params, steps[0]['param'], objfunc, static_parameters, url, files, metainfo, conf)
             futures.append(executor.submit(thread_function, task))
         # for future in concurrent.futures.as_completed(futures):
         #     pass
