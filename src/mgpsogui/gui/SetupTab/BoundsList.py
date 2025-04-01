@@ -7,6 +7,7 @@ from customtkinter import CTkOptionMenu
 from customtkinter import CTkTextbox
 from customtkinter import CTkImage
 from .BoundsEditorWindow import BoundsEditorWindow as BEW
+from .SamplingNameListWindow import SamplingNameListWindow as SNLW
 from ...util.CTkToolTip import CTkToolTip as ctt
 import tkinter as tk
 import json
@@ -172,7 +173,7 @@ class BoundsList(CTkFrame):
                 self.validate_number(bounds_max.get(), cc, bounds_max)
                 tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
                 
-                if mode == "Sampling: Random" or mode == "Sampling: Halton":
+                """if mode == "Sampling: Random" or mode == "Sampling: Halton":
                     
                     tt1 = ctt(bounds_min, delay=0.1, alpha=0.95, message="...")
                     tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
@@ -186,10 +187,12 @@ class BoundsList(CTkFrame):
                     row += 1
                     index += 1
                     continue
-
-                default_value = CTkEntry(self.containerFrame)
-                default_value.grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="new")
-                default_value.configure(textvariable=bound["default_value"])
+                """
+                
+                if (mode == "Optimization"):
+                    default_value = CTkEntry(self.containerFrame)
+                    default_value.grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="new")
+                    default_value.configure(textvariable=bound["default_value"])
 
                 if (bound_type == "list" and mode == "Optimization"):
                     calibration_strat = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['none', 'mean', 'single'], variable=bound["calibration_strategy"])
@@ -199,6 +202,14 @@ class BoundsList(CTkFrame):
                         BEW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
 
                     open_window = lambda event=None, bound_index=index: (button_click_event(bound_index))
+                    expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
+                    button = CTkButton(self.containerFrame, width=30, text=None, image=expand_image, command=open_window)
+                    button.grid(row=row, column=6, padx=(5, 5), pady=(5, 5), sticky="new")
+                elif (bound_type == "list" and (mode == "Sampling: Random" or mode == "Sampling: Halton")):
+                    def button_click_event_sampling(bound_index):
+                        SNLW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
+
+                    open_window = lambda event=None, bound_index=index: (button_click_event_sampling(bound_index))
                     expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
                     button = CTkButton(self.containerFrame, width=30, text=None, image=expand_image, command=open_window)
                     button.grid(row=row, column=6, padx=(5, 5), pady=(5, 5), sticky="new")
