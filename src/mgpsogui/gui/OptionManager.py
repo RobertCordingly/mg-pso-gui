@@ -377,11 +377,41 @@ class OptionManager():
     def copy_list(self, source_mode):
         name = "backup"
         index = 0
+
+        target_mode = self._mode_sv.get()
+
         while name + str(index) in self._data:
             index += 1
-        self._data[name + str(index)] = self._data[self._mode_sv.get()]
+        self._data[name + str(index)] = self._data[target_mode]
 
-        self._data[self._mode_sv.get()] = self._data[source_mode]
+        # Copy data except hyperparameters
+        original_hyperparameters = self._data[target_mode]["hyperparameters"]
+        self._data[target_mode] = self._data[source_mode]
+        self._data[target_mode]["hyperparameters"] = original_hyperparameters
+
+        # Add in cal_startTime and cal_endTime if missing, copy values from startTime/endTime
+        if target_mode == "Optimization":
+            startTime = None
+            endTime = None
+            cal_startTime = None
+            cal_endTime = None
+            for param in self._data[target_mode]["model_parameters"]:
+                if param["name"] == "startTime":
+                    startTime = param
+                elif param["name"] == "endTime":
+                    endTime = param
+                elif param["name"] == "cal_startTime":
+                    cal_startTime = param
+                elif param["name"] == "cal_endTime":
+                    cal_endTime = param
+
+            if cal_endTime is None and startTime is not None:
+                startTime["name"] = "cal_startTime"
+                self._data[target_mode]["model_parameters"].append(startTime)
+
+            if cal_startTime is None and endTime is not None:
+                endTime["name"] = "cal_endTime"
+                self._data[target_mode]["model_parameters"].append(endTime)
 
     def combine_steps(self):
         mode = self._mode_sv.get()
