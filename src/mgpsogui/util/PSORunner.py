@@ -73,12 +73,6 @@ def run_process(stdout_queue, stderr_queue, results_queue, data, folder, mode):
         else:
             print("Invalid mode")
 
-        stdout_thread.join()
-        stderr_thread.join()
-        
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
-
     except Exception as e:
         print("An exception occurred: ", flush=True)
         print(str(e))
@@ -91,12 +85,30 @@ def run_process(stdout_queue, stderr_queue, results_queue, data, folder, mode):
             f.write(str(e))
             f.write("\n")
             traceback.print_exc(file=f)
+
     finally:
-        stdout_thread.join()
-        stderr_thread.join()
-        
+        try:
+            stdout_thread.join()
+            stderr_thread.join()
+        except:
+            pass
+
         sys.stdout = old_stdout
         sys.stderr = old_stderr
+
+        try:
+            stdout_queue.close()
+            stdout_queue.join_thread()
+
+            stderr_queue.close()
+            stderr_queue.join_thread()
+
+            results_queue.close()
+            results_queue.join_thread()
+        except:
+            pass 
+
+        os._exit(0)
 
 def process_list(data, parameter_map, args, options, oh_strategy, config, metainfo, list_name):
     """_summary_
@@ -357,9 +369,6 @@ def run_optimization(data, folder, results_queue):
     
     results_queue.put(trace)
     print(trace, flush=True)
-    pass
-
-
 
 def run_sensitivity_analysis(data, folder, results_queue):
     """_summary_
@@ -371,7 +380,7 @@ def run_sensitivity_analysis(data, folder, results_queue):
     """
     print("Running Sensitivity Analysis", flush=True)
 
-    shutil.copyfile(data["sensitivity_analysis_path"], os.path.join(folder, 'results', 'trace.csv'))
+    shutil.copyfile(os.path.join(folder, 'results', data["sensitivity_analysis_path"]), os.path.join(folder, 'results', 'trace.csv'))
     trace_path = os.path.join(folder, 'results', 'trace.csv')
 
     output_steps = process_steps(data)
@@ -394,7 +403,7 @@ def run_sensitivity_analysis(data, folder, results_queue):
 
     request_json = {
         "metainfo": {
-            "service_url": None,
+            "service_url": data['url'],
             "description": "",
             "name": "",
             "mode": "async"
@@ -427,11 +436,6 @@ def run_sensitivity_analysis(data, folder, results_queue):
     sensitivity_analysis(data['url'], request_path, trace_path, output_directory)
 
     print("Finished Sensitivity Analysis", flush=True)
-
-
-
-
-
 
 
 

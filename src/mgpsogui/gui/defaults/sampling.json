@@ -47,7 +47,9 @@
 					"value": "drake58hru-5min",
 					"type": "string",
 					"destination": "args"
-				},
+				}
+			],
+			"hyperparameters": [
 				{
 					"name": "offset",
 					"value": "5",
@@ -66,9 +68,6 @@
 					"type": "integer",
 					"destination": "kwargs"
 				}
-			],
-			"hyperparameters": [
-
 			],
 			"service_parameters": [
 				{

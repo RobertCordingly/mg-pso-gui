@@ -7,7 +7,6 @@ from customtkinter import CTkOptionMenu
 from customtkinter import CTkTextbox
 from customtkinter import CTkImage
 from .BoundsEditorWindow import BoundsEditorWindow as BEW
-from .SamplingNameListWindow import SamplingNameListWindow as SNLW
 from ...util.CTkToolTip import CTkToolTip as ctt
 import tkinter as tk
 import json
@@ -94,22 +93,32 @@ class BoundsList(CTkFrame):
 
 
         show_strategy = False
+        show_default = False
+        show_bounds = True
 
-        if mode != "Sensitivity Analysis":
+        if mode == "Sensitivity Analysis":
+            show_bounds = False
+
+        if mode == "Optimization":
+            show_default = True
+
+        for bound in bounds:
+            bound_type = bound["type"].get()
+            if bound_type == "list":
+                show_strategy = True
+                show_default = True
+                break
+
+
+        if show_bounds:
             CTkLabel(self.containerFrame, text="Bounds:").grid(row=row, column=2, columnspan=2, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
-            if mode == "Optimization":
-                
-                for bound in bounds:
-                    bound_type = bound["type"].get()
-                    if bound_type == "list":
-                        show_strategy = True
-                        break
+        if show_default:
+            CTkLabel(self.containerFrame, text="Default:").grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
-                CTkLabel(self.containerFrame, text="Default:").grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="nsew")
+        if show_strategy:
+            CTkLabel(self.containerFrame, text="Strategy:").grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="nsew")
 
-                if show_strategy:
-                    CTkLabel(self.containerFrame, text="Strategy:").grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="nsew")
         row += 1
         
         for bound in bounds:
@@ -155,46 +164,26 @@ class BoundsList(CTkFrame):
                 ctt(bb, delay=0.1, alpha=0.95, message="Delete this bound...")
             else:
                 
-                if mode == "Sensitivity Analysis":
-                    row += 1
-                    index += 1
-                    continue
-
-                bounds_min = CTkEntry(self.containerFrame)
-                vcmd = (self.register(self.validate_number), '%P', cc, bounds_min)
-                bounds_min.grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="new")
-                bounds_min.configure(textvariable=bound["min_bound"], validate='all', validatecommand=vcmd)
-                self.validate_number(bounds_min.get(), cc, bounds_min)
-                            
-                bounds_max = CTkEntry(self.containerFrame)
-                vcmd = (self.register(self.validate_number), '%P', cc, bounds_max)
-                bounds_max.grid(row=row, column=3, padx=(5, 5), pady=(5, 5), sticky="new")
-                bounds_max.configure(textvariable=bound["max_bound"], validate='all', validatecommand=vcmd)
-                self.validate_number(bounds_max.get(), cc, bounds_max)
-                tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
                 
-                """if mode == "Sampling: Random" or mode == "Sampling: Halton":
-                    
-                    tt1 = ctt(bounds_min, delay=0.1, alpha=0.95, message="...")
-                    tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
-                    if cc is not None:
-                        tt3 = ctt(cc, delay=0.1, alpha=0.95, message="...")
-                            
-                    self.tooltip_list.append([tt3, tt1, tt2])
-                            
-                    self.update_tooltips(index)
-
-                    row += 1
-                    index += 1
-                    continue
-                """
+                if show_bounds:
+                    bounds_min = CTkEntry(self.containerFrame)
+                    vcmd = (self.register(self.validate_number), '%P', cc, bounds_min)
+                    bounds_min.grid(row=row, column=2, padx=(5, 5), pady=(5, 5), sticky="new")
+                    bounds_min.configure(textvariable=bound["min_bound"], validate='all', validatecommand=vcmd)
+                    self.validate_number(bounds_min.get(), cc, bounds_min)
+                                
+                    bounds_max = CTkEntry(self.containerFrame)
+                    vcmd = (self.register(self.validate_number), '%P', cc, bounds_max)
+                    bounds_max.grid(row=row, column=3, padx=(5, 5), pady=(5, 5), sticky="new")
+                    bounds_max.configure(textvariable=bound["max_bound"], validate='all', validatecommand=vcmd)
+                    self.validate_number(bounds_max.get(), cc, bounds_max)
                 
-                if (mode == "Optimization"):
+                if show_default:
                     default_value = CTkEntry(self.containerFrame)
                     default_value.grid(row=row, column=4, padx=(5, 5), pady=(5, 5), sticky="new")
                     default_value.configure(textvariable=bound["default_value"])
 
-                if (bound_type == "list" and mode == "Optimization"):
+                if (bound_type == "list"):
                     calibration_strat = CTkOptionMenu(self.containerFrame, dynamic_resizing=False, values=['none', 'mean', 'single'], variable=bound["calibration_strategy"])
                     calibration_strat.grid(row=row, column=5, padx=(5, 5), pady=(5, 5), sticky="new")
 
@@ -205,21 +194,14 @@ class BoundsList(CTkFrame):
                     expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
                     button = CTkButton(self.containerFrame, width=30, text=None, image=expand_image, command=open_window)
                     button.grid(row=row, column=6, padx=(5, 5), pady=(5, 5), sticky="new")
-                elif (bound_type == "list" and (mode == "Sampling: Random" or mode == "Sampling: Halton")):
-                    def button_click_event_sampling(bound_index):
-                        SNLW(title="Edit List Bound", step_index=self.step_index, bound_index=bound_index, option_manager=self.option_manager)
-
-                    open_window = lambda event=None, bound_index=index: (button_click_event_sampling(bound_index))
-                    expand_image = CTkImage(Image.open(os.path.join("./images", "expand.png")), size=(20, 20))
-                    button = CTkButton(self.containerFrame, width=30, text=None, image=expand_image, command=open_window)
-                    button.grid(row=row, column=6, padx=(5, 5), pady=(5, 5), sticky="new")
                 
-                tt1 = ctt(bounds_min, delay=0.1, alpha=0.95, message="...")
-                tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
-                if cc is not None:
-                    tt3 = ctt(cc, delay=0.1, alpha=0.95, message="...")
+                if show_bounds:
+                    tt1 = ctt(bounds_min, delay=0.1, alpha=0.95, message="...")
+                    tt2 = ctt(bounds_max, delay=0.1, alpha=0.95, message="...")
+                    if cc is not None:
+                        tt3 = ctt(cc, delay=0.1, alpha=0.95, message="...")
                         
-                self.tooltip_list.append([tt3, tt1, tt2])
+                    self.tooltip_list.append([tt3, tt1, tt2])
                         
                 self.update_tooltips(index)
             

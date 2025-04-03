@@ -116,7 +116,7 @@ class App(customtkinter.CTk):
 		self.running_loop_ticks = 1
 
 		# Configure window
-		version = "v0.2.120"
+		version = "v0.2.134"
 		self.title("COSU Manager (" + version + ")")
 
 		screen_width = self.winfo_screenwidth()
@@ -265,6 +265,8 @@ class App(customtkinter.CTk):
 			self.after(3000, lambda: self.save_button.configure(text="Save As"))
 
 	def auto_save_project(self):
+		return 0
+
 		data = self.option_manager.get_project_data()
 
 		if (data['path'] != "/tmp"):
