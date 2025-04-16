@@ -155,8 +155,8 @@ def global_best(steps: Dict, rounds: Tuple, args: Dict, n_particles: int, iters:
     if min_rounds < 1:
         raise Exception('min rounds >= 1 expected, was "{}"'.format(min_rounds))
 
-    if max_rounds > 20:
-        raise Exception('max rounds <= 20 expected, was "{}"'.format(max_rounds))
+    if max_rounds < min_rounds:
+        raise Exception('max rounds >= min rounds expected, was "{} < {}"'.format(max_rounds, min_rounds))
 
     if n_threads < 1:
         raise Exception('n_threads >= 1, was "{}"'.format(n_threads))
