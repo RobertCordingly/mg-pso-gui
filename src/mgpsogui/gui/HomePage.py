@@ -715,6 +715,11 @@ class App(customtkinter.CTk):
 				# Delete the file
 				os.remove(os.path.join(folder, 'crash.txt'))
 
+			self.footer_progress_bar.stop()
+			self.footer_progress_bar.configure(mode="determinate")
+			self.footer_progress_bar.set(0)
+			self.footer_progress_label.configure(text="Job Finished")
+
 def get_color(class_name, property = "fg_color"):
     return ThemeManager.theme[class_name][property]
 

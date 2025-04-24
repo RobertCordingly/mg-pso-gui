@@ -48,15 +48,18 @@ def run_process(stdout_queue, stderr_queue, results_queue, data, folder, mode):
         # Redirect stdout and stderr to files
         old_stdout = sys.stdout
         old_stderr = sys.stderr
-        
+
         read_stdout, write_stdout = os.pipe()
         read_stderr, write_stderr = os.pipe()
-        
+
         sys.stdout = os.fdopen(write_stdout, 'w')
         sys.stderr = os.fdopen(write_stderr, 'w')
-        
-        stdout_thread = threading.Thread(target=enqueue_output, args=(os.fdopen(read_stdout, 'r'), stdout_queue))
-        stderr_thread = threading.Thread(target=enqueue_output, args=(os.fdopen(read_stderr, 'r'), stderr_queue))
+
+        f_read_stdout = os.fdopen(read_stdout, 'r')
+        f_read_stderr = os.fdopen(read_stderr, 'r')
+
+        stdout_thread = threading.Thread(target=enqueue_output, args=(f_read_stdout, stdout_queue))
+        stderr_thread = threading.Thread(target=enqueue_output, args=(f_read_stderr, stderr_queue))
         stdout_thread.daemon = True
         stderr_thread.daemon = True
         stdout_thread.start()
@@ -88,13 +91,24 @@ def run_process(stdout_queue, stderr_queue, results_queue, data, folder, mode):
 
     finally:
         try:
+            os.close(f_read_stdout)
             stdout_thread.join()
+            os.close(f_read_stdout)
             stderr_thread.join()
         except:
             pass
 
+        w_stdout = sys.stdout
+        w_stderr = sys.stderr
+
         sys.stdout = old_stdout
         sys.stderr = old_stderr
+
+        try:
+            os.close(w_stdout)
+            os.close(w_stderr)
+        except:
+            pass
 
         try:
             stdout_queue.close()
@@ -106,9 +120,10 @@ def run_process(stdout_queue, stderr_queue, results_queue, data, folder, mode):
             results_queue.close()
             results_queue.join_thread()
         except:
-            pass 
+            pass
 
         os._exit(0)
+
 
 def process_list(data, parameter_map, args, options, oh_strategy, config, metainfo, list_name):
     """_summary_
